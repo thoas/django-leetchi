@@ -74,7 +74,6 @@ class PaymentViewMixin(object):
 
 
 class PaymentDoneViewMixin(object):
-
     def get(self, request, *args, **kwargs):
 
         try:
