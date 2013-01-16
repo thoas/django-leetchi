@@ -1,5 +1,7 @@
 from django.db import models
 
+from djleetchi.api import handler
+
 
 class ResourceField(models.IntegerField):
     def __init__(self, to, *args, **kwargs):
@@ -20,7 +22,6 @@ class ReverseSingleRelatedObjectDescriptor(object):
         self.field = field_with_rel
 
     def __get__(self, instance, instance_type=None):
-        from djleetchi import handler
 
         if instance is None:
             return self
@@ -45,7 +46,7 @@ class ReverseSingleRelatedObjectDescriptor(object):
         if instance is None:
             raise AttributeError("%s must be accessed via instance" % self._field.name)
 
-        if value is None and self.field.null == False:
+        if value is None and self.field.null is False:
             raise ValueError('Cannot assign None: "%s.%s" does not allow null values.' %
                              (instance._meta.object_name, self.field.name))
         elif value is not None and not isinstance(value, self.field.to):
