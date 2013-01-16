@@ -18,6 +18,9 @@ setup(
     author_email='florent.messa@gmail.com',
     url='http://github.com/thoas/django-leetchi',
     packages=find_packages(),
+    install_requires=[
+        'python-leetchi',
+    ],
     zip_safe=False,
     include_package_data=True,
     classifiers=[

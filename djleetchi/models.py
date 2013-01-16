@@ -7,8 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from djleetchi.fields import ResourceField
-
 from djleetchi import handler
+from djleetchi.helpers import get_payer
 
 from leetchi.resources import (Contribution as LeetchiContribution,
                                Transfer as LeetchiTransfer,
@@ -65,7 +65,7 @@ class Contribution(BaseLeetchi):
             if 'user' in kwargs:
                 account_user = kwargs.pop('user')
 
-            user, created = account_user.get_profile().get_payer()
+            user = get_payer(account_user)
 
             data = {
                 'user': user,
@@ -135,9 +135,9 @@ class Transfer(BaseLeetchi):
 
     def save(self, **kwargs):
         if not self.pk and not self.transfer_id:
-            payer, created = self.payer.get_profile().get_payer()
+            payer = get_payer(self.payer)
 
-            beneficiary, created = self.beneficiary.get_profile().get_payer()
+            beneficiary = get_payer(self.beneficiary)
 
             transfer = LeetchiTransfer(**{
                 'payer': payer,
@@ -164,7 +164,7 @@ class TransferRefund(BaseLeetchi):
 
     def save(self, **kwargs):
         if not self.pk and not self.transfer_refund_id:
-            user, created = self.user.get_profile().get_payer()
+            user = get_payer(self.user)
 
             transfer_refund = LeetchiTransferRefund(**{
                 'user': user,
@@ -191,7 +191,7 @@ class Refund(BaseLeetchi):
 
     def save(self, **kwargs):
         if not self.pk and not self.refund_id:
-            user, created = self.user.get_profile().get_payer()
+            user = get_payer(self.user)
 
             refund = LeetchiRefund(**{
                 'user': user,

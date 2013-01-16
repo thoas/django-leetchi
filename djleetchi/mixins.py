@@ -9,6 +9,7 @@ from leetchi.exceptions import APIError, DecodeError
 
 from djleetchi.models import Contribution, Transfer, Refund, TransferRefund
 from djleetchi.util import get_current_lang
+from djleetchi.helpers import get_payer, get_wallet
 
 logger_leetchi = logging.getLogger('leetchi')
 
@@ -18,9 +19,9 @@ class PaymentViewMixin(object):
         user = request.user
 
         try:
-            leetchi_user, created = user.get_profile().get_payer()
+            leetchi_user = get_payer(user)
 
-            leetchi_wallet, created = self.get_object().get_wallet()
+            leetchi_wallet = get_wallet(self.get_object())
 
             if not leetchi_user or not leetchi_wallet or not leetchi_wallet.get_pk():
                 raise AttributeError
@@ -104,9 +105,9 @@ class PaymentDoneViewMixin(object):
 
                         return redirect(self.get_error_url(leetchi_contribution))
 
-            leetchi_user, created = request.user.get_profile().get_payer()
+            leetchi_user = get_payer(request.user)
 
-            leetchi_wallet, created = self.get_object().get_wallet()
+            leetchi_wallet = get_wallet(self.get_object())
 
             if not leetchi_user or not leetchi_wallet or not leetchi_wallet.get_pk():
                 raise AttributeError
@@ -233,7 +234,7 @@ class RefundViewMixin(object):
             return response
 
         try:
-            leetchi_user = self.get_user().get_profile().leetchi_user
+            leetchi_user = get_payer(self.get_user())
 
             if not leetchi_user or not leetchi_user.get_pk():
                 self.error_message()

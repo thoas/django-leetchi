@@ -1,19 +1,15 @@
 import logging
 
 from django import forms
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.sites.models import Site
 
 from djleetchi.models import Contribution, Transfer, Withdrawal
 from djleetchi.forms import WithdrawalForm
+from djleetchi import handler
+from djleetchi.helpers import get_payer
 
 from leetchi.resources import Withdrawal as LeetchiWithdrawal
 from leetchi.exceptions import APIError, DecodeError
-
-from djleetchi import handler
-
-import waffle
 
 logger_leetchi = logging.getLogger('leetchi')
 
@@ -31,7 +27,7 @@ class NewWithdrawalForm(WithdrawalForm):
                                'amount', 'client_fee_amount'):
                 setattr(w, field_name, self.cleaned_data[field_name])
 
-            payer, created = self.user.get_profile().get_payer()
+            payer = get_payer(self.user)
 
             w.user = payer
             w.save(handler)
@@ -49,36 +45,19 @@ class NewWithdrawalForm(WithdrawalForm):
 
 
 class NewContributionForm(forms.Form):
-    amount = forms.CharField(label=_("Amount"), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
+    amount = forms.CharField(label=_('Amount'), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
+
+    def get_return_url(self):
+        raise NotImplementedError
 
     def save(self, request, user, return_url, template_url=None):
         try:
-            current_site = Site.objects.get_current()
-
-            protocol = getattr(settings, "DEFAULT_HTTP_PROTOCOL", "http")
-
-            absolute_url = request.META.get('HTTP_HOST', current_site.domain)
-
-            return_url = u"%s://%s%s" % (
-                protocol,
-                unicode(absolute_url),
-                return_url
-            )
-
             contribution = Contribution()
             contribution.content_object = user
             contribution.user = request.user
             contribution.wallet_id = 0
             contribution.amount = int(float(self.cleaned_data.get('amount')) * 100)
-            contribution.return_url = return_url
-
-            if waffle.flag_is_active(request, 'payment_template_url') and template_url:
-                template_url = u"https://%s%s" % (
-                    unicode(absolute_url),
-                    template_url
-                )
-
-                contribution.template_url = template_url
+            contribution.return_url = self.get_return_url()
 
             contribution.save(user=user)
         except (APIError, DecodeError, AssertionError, AttributeError), e:
@@ -89,15 +68,14 @@ class NewContributionForm(forms.Form):
 
 
 class NewTransferForm(forms.Form):
-    amount = forms.CharField(label=_("Amount"), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
+    amount = forms.CharField(label=_('Amount'), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(NewTransferForm, self).__init__(*args, **kwargs)
 
     def clean_amount(self):
-
-        leetchi_user, created = self.user.get_profile().get_payer()
+        leetchi_user = get_payer(self.user)
 
         amount = self.cleaned_data.get('amount')
 
@@ -110,7 +88,7 @@ class NewTransferForm(forms.Form):
         return amount
 
     def is_personal_amount_enough(self, amount):
-        leetchi_user, created = self.user.get_profile().get_payer()
+        leetchi_user = get_payer(self.user)
 
         personal_amount = leetchi_user.personal_wallet_amount_converted
 
