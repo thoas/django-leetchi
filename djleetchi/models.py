@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from djleetchi.fields import ResourceField
-from djleetchi import handler
+from djleetchi.api import handler
 from djleetchi.helpers import get_payer
 
 from leetchi.resources import (Contribution as LeetchiContribution,

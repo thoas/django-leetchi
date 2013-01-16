@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djleetchi.models import Contribution, Transfer, Withdrawal
 from djleetchi.forms import WithdrawalForm
-from djleetchi import handler
+from djleetchi.api import handler
 from djleetchi.helpers import get_payer
 
 from leetchi.resources import Withdrawal as LeetchiWithdrawal

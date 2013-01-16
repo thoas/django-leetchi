@@ -20,7 +20,8 @@ class ResourcesNode(template.Node):
         except template.VariableDoesNotExist:
             return ''
 
-        results = self.klass.objects.filter(content_type=ContentType.objects.get_for_model(obj), object_id=obj.pk)
+        results = self.klass.objects.filter(content_type=ContentType.objects.get_for_model(obj),
+                                            object_id=obj.pk)
 
         if self.var_name:
             context[self.var_name] = results

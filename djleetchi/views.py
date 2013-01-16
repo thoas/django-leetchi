@@ -13,7 +13,7 @@ from leetchi.resources import (Contribution as LeetchiContribution,
 
 from leetchi.base import DoesNotExist as ResourceDoesNotExist
 
-from djleetchi import handler
+from djleetchi.api import handler
 from djleetchi.util import JSONResponse
 
 
