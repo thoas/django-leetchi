@@ -41,7 +41,7 @@ def get_resources_for(parser, token, klass):
         raise template.TemplateSyntaxError, "%s tag had invalid arguments" % tag_name
     user, var_name = m.groups()
 
-    return ResourcesNode(user, var_name)
+    return ResourcesNode(user, var_name, klass)
 
 
 @register.tag
