@@ -236,43 +236,44 @@ class RefundViewMixin(object):
             leetchi_user = get_payer(self.get_user())
 
             if not leetchi_user or not leetchi_user.get_pk():
-                self.error_message()
-            else:
+                return redirect(self.get_error_url())
 
-                if 'transfer' in self.statuses and not 'transferrefund' in self.statuses:
-                    transfers = self.statuses.get('transfer')
+            if 'transfer' in self.statuses and not 'transferrefund' in self.statuses:
+                transfers = self.statuses.get('transfer')
 
-                    transfer_refund_list = []
+                transfer_refund_list = []
 
-                    for transfer in transfers:
-                        transfer_refund = TransferRefund()
-                        transfer_refund.content_object = self.get_observed()
-                        transfer_refund.transfer = transfer
-                        transfer_refund.user = self.user
-                        transfer_refund.save()
+                for transfer in transfers:
+                    transfer_refund = TransferRefund()
+                    transfer_refund.content_object = self.get_observed()
+                    transfer_refund.transfer = transfer
+                    transfer_refund.user = self.user
+                    transfer_refund.save()
 
-                        transfer_refund_list.append(transfer_refund)
+                    transfer_refund_list.append(transfer_refund)
 
-                    return self.success(transfer_refund_list)
+                return self.success(transfer_refund_list)
 
-                elif 'contribution' in self.statuses and not 'refund' in self.statuses:
+            elif 'contribution' in self.statuses and not 'refund' in self.statuses:
 
-                    contributions = self.statuses.get('contribution')
+                contributions = self.statuses.get('contribution')
 
-                    refund_list = []
+                refund_list = []
 
-                    for contribution in contributions:
-                        refund = Refund()
-                        refund.content_object = self.get_observed()
-                        refund.contribution = contribution
-                        refund.user = self.user
-                        refund.save()
+                for contribution in contributions:
+                    refund = Refund()
+                    refund.content_object = self.get_observed()
+                    refund.contribution = contribution
+                    refund.user = self.user
+                    refund.save()
 
-                        refund_list.append(refund)
+                    refund_list.append(refund)
 
-                    return self.success(refund_list)
+                return self.success(refund_list)
 
         except (DecodeError, APIError), e:
             logger_leetchi.error(e)
+
+            return redirect(self.get_error_url())
 
         return redirect(self.get_return_url())
