@@ -1,5 +1,4 @@
 from datetime import datetime
-import time
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -29,12 +28,14 @@ class BaseLeetchi(models.Model):
         abstract = True
 
     def get_tag(self):
-        return u'%s.%s:%d' % (self.content_type.app_label, self.content_type.model, self.object_id)
+        return u'%s.%s:%d' % (self.content_type.app_label,
+                              self.content_type.model,
+                              self.object_id)
 
 
 class Contribution(BaseLeetchi):
     TYPE_PAYLINE = 1
-    TYPE_OGONE = 1
+    TYPE_OGONE = 2
     TYPE_CHOICES = (
         (TYPE_PAYLINE, 'Payline'),
         (TYPE_OGONE, 'Ogone'),
@@ -181,41 +182,6 @@ class TransferRefund(BaseLeetchi):
         return self.transfer.transfer
 
 
-class RIB(models.Model):
-    type = models.CharField(max_length=20, choices=PROFILE_TYPE_CHOICES.CHOICES, verbose_name=_('Type'), null=True, default=PROFILE_TYPE_CHOICES.PERSONAL)
-    name = models.CharField(max_length=255, verbose_name=_('Nom'), help_text=_(u'Le nom du propriétaire du compte bancaire'))
-    address = models.TextField(verbose_name=_('Adresse'), help_text=_(u'Adresse du propriétaire du compte bancaire'))
-    bic = models.CharField(max_length=255, verbose_name=_('BIC'), help_text=_(u'BIC, sans espaces entre les caractères'))
-    iban = models.CharField(max_length=255, verbose_name=_('IBAN'), help_text=_(u'IBAN, sans espaces entre les caractères'))
-
-    rib = ContentTypeRestrictedFileField(upload_to=get_image_path,
-                                         content_types=['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'],
-                                         max_upload_size=5242880,
-                                         verbose_name=_(u'RIB en pièce jointe'),
-                                         help_text=_(u'Nécessaire pour le transfert des fonds'), null=True, blank=True)
-
-    kbis = ContentTypeRestrictedFileField(upload_to=get_image_path,
-                                          content_types=['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'],
-                                          max_upload_size=5242880,
-                                          verbose_name=_(u'K-bis'),
-                                          help_text=_(u'Copie d’un extrait K-bis de moins de 3 mois'), null=True, blank=True)
-
-    receipt = ContentTypeRestrictedFileField(upload_to=get_image_path,
-                                             content_types=['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'],
-                                             max_upload_size=5242880,
-                                             verbose_name=_(u'Récépissé'),
-                                             help_text=_(u'Récépissé de dépôt de déclaration en préfecture de \
-                                                         l’association ou copie de l’insertion au Journal Officiel \
-                                                         d\'un extrait de cette déclaration'), null=True, blank=True)
-
-    card = ContentTypeRestrictedFileField(upload_to=get_image_path,
-                                          content_types=['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'],
-                                          max_upload_size=5242880,
-                                          verbose_name=_(u'Pièce d\'identité'),
-                                          help_text=_(u'Copie d’une pièce d\'identité en cours de validité (carte nationale d\'identité, passeport)'),
-                                          null=True, blank=True)
-
-
 class Refund(BaseLeetchi):
     user = models.ForeignKey(User)
     refund = ResourceField(LeetchiRefund)
@@ -245,7 +211,6 @@ class Refund(BaseLeetchi):
 
 class Withdrawal(BaseLeetchi):
     withdrawal = ResourceField(LeetchiWithdrawal)
-    rib = models.ForeignKey(RIB, null=True, blank=True)
 
 
 class Wallet(BaseLeetchi):
