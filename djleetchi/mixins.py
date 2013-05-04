@@ -19,14 +19,11 @@ class PaymentViewMixin(object):
         user = request.user
 
         try:
-            leetchi_user = get_payer(user)
+            payer = get_payer(user)
 
-            leetchi_wallet = get_wallet(self.get_object())
+            wallet = get_wallet(self.get_object())
 
-            if not leetchi_user or not leetchi_wallet or not leetchi_wallet.get_pk():
-                raise AttributeError
-
-            personal_wallet_amount = leetchi_user.personal_wallet_amount or 0
+            personal_wallet_amount = payer.personal_wallet_amount or 0
 
             amount = int(self.get_amount() * 100)
 
@@ -55,7 +52,7 @@ class PaymentViewMixin(object):
 
             return redirect(self.get_return_url())
 
-        except (APIError, DecodeError, AssertionError, AttributeError), e:
+        except (APIError, DecodeError), e:
             logger_leetchi.error(e)
 
             return redirect(self.get_error_url())
@@ -87,31 +84,16 @@ class PaymentDoneViewMixin(object):
                 except Contribution.DoesNotExist:
                     pass
                 else:
+                    contribution.sync_status()
 
-                    leetchi_contribution = contribution.contribution
-
-                    if leetchi_contribution.is_success():
-                        contribution.is_success = True
-                        contribution.is_completed = True
-
-                        contribution.save()
-
-                    elif leetchi_contribution.is_completed and not leetchi_contribution.is_succeeded:
-                        contribution.is_success = False
-                        contribution.is_completed = True
-
-                        contribution.save()
-
+                    if contribution.is_error():
                         return redirect(self.get_error_url(leetchi_contribution))
 
-            leetchi_user = get_payer(request.user)
+            payer = get_payer(request.user)
 
-            leetchi_wallet = get_wallet(self.get_object())
+            wallet = get_wallet(self.get_object())
 
-            if not leetchi_user or not leetchi_wallet or not leetchi_wallet.get_pk():
-                raise AttributeError
-
-            personal_amount = leetchi_user.personal_wallet_amount
+            personal_amount = payer.personal_wallet_amount
 
             amount = int(self.get_amount() * 100)
 
@@ -123,10 +105,10 @@ class PaymentDoneViewMixin(object):
             transfer.amount = amount
             transfer.payer = self.get_payer()
             transfer.beneficiary = self.get_beneficiary()
-            transfer.beneficiary_wallet = leetchi_wallet
+            transfer.beneficiary_wallet = wallet
             transfer.save()
 
-        except (APIError, DecodeError, AttributeError), e:
+        except (APIError, DecodeError), e:
             logger_leetchi.error(e)
 
             return redirect(self.get_payment_error_url())
@@ -166,7 +148,8 @@ class RefundViewMixin(object):
         statuses = {}
 
         resources = (
-            (Refund, [{'user': self.user, 'is_success': True, 'is_completed': True}, {'user': self.user, 'is_completed': False}]),
+            (Refund, [{'user': self.user, 'is_success': True, 'is_completed': True},
+                      {'user': self.user, 'is_completed': False}]),
             (TransferRefund, [{'user': self.user}],),
             (Contribution, [{'is_success': True, 'user': self.user}],),
             (Transfer, [{'payer': self.user}],)
@@ -233,10 +216,7 @@ class RefundViewMixin(object):
             return response
 
         try:
-            leetchi_user = get_payer(self.get_user())
-
-            if not leetchi_user or not leetchi_user.get_pk():
-                return redirect(self.get_error_url())
+            payer = get_payer(self.get_user())
 
             if 'transfer' in self.statuses and not 'transferrefund' in self.statuses:
                 transfers = self.statuses.get('transfer')

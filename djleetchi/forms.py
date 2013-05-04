@@ -8,8 +8,8 @@ from djleetchi.forms import WithdrawalForm
 from djleetchi.api import handler
 from djleetchi.helpers import get_payer
 
-from leetchi.resources import Withdrawal as LeetchiWithdrawal
 from leetchi.exceptions import APIError, DecodeError
+from leetchi import resources
 
 logger_leetchi = logging.getLogger('leetchi')
 
@@ -21,7 +21,7 @@ class NewWithdrawalForm(WithdrawalForm):
 
     def save(self):
         try:
-            w = LeetchiWithdrawal()
+            w = resources.Withdrawal()
             for field_name in ('bank_account_bic', 'bank_account_iban',
                                'bank_account_owner_address', 'bank_account_owner_name',
                                'amount', 'client_fee_amount'):
@@ -37,7 +37,7 @@ class NewWithdrawalForm(WithdrawalForm):
             withdrawal.content_object = self.user
             withdrawal.save()
 
-        except (APIError, DecodeError, AssertionError, AttributeError), e:
+        except (APIError, DecodeError) as e:
             logger_leetchi.error(e)
             return False
         else:
@@ -45,7 +45,9 @@ class NewWithdrawalForm(WithdrawalForm):
 
 
 class NewContributionForm(forms.Form):
-    amount = forms.CharField(label=_('Amount'), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
+    amount = forms.CharField(label=_('Amount'),
+                             widget=forms.TextInput,
+                             help_text=_('Value in decimal, e.g. 20.50e'))
 
     def get_return_url(self):
         raise NotImplementedError
@@ -60,7 +62,7 @@ class NewContributionForm(forms.Form):
             contribution.return_url = self.get_return_url()
 
             contribution.save(user=user)
-        except (APIError, DecodeError, AssertionError, AttributeError), e:
+        except (APIError, DecodeError) as e:
             logger_leetchi.error(e)
             return False
         else:
@@ -68,7 +70,9 @@ class NewContributionForm(forms.Form):
 
 
 class NewTransferForm(forms.Form):
-    amount = forms.CharField(label=_('Amount'), widget=forms.TextInput, help_text=_('Value in decimal, e.g. 20.50e'))
+    amount = forms.CharField(label=_('Amount'),
+                             widget=forms.TextInput,
+                             help_text=_('Value in decimal, e.g. 20.50e'))
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -104,7 +108,7 @@ class NewTransferForm(forms.Form):
             transfer.beneficiary = beneficiary_user
             transfer.beneficiary_wallet_id = 0
             transfer.save()
-        except (APIError, DecodeError, AssertionError, AttributeError), e:
+        except (APIError, DecodeError) as e:
             logger_leetchi.error(e)
             return False
         else:
