@@ -113,6 +113,8 @@ def sync_refund(refund_id):
 
 @task
 def sync_resource(klass, resource_id):
+    logger = sync_resource.get_logger()
+
     try:
         instance = klass.objects.get(pk=resource_id)
     except klass.DoesNotExist:
