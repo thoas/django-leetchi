@@ -1,5 +1,4 @@
-from celery.task import PeriodicTask
-from celery.task import task
+from celery.task import PeriodicTask, task
 from celery import group
 
 from leetchi.exceptions import APIError, DecodeError
@@ -42,10 +41,6 @@ def sync_contribution(contribution_id):
                     logger.info(u'[Contribution]: set succeeded for %d, from leetchi contribution %d' %
                                 (c.pk, c.contribution_id))
                     c.is_success = True
-
-                    # backward compatibility
-                    if c.wallet_id:
-                        c.content_object.set_status_valid()
                 else:
                     logger.info(u'[Contribution]: set aborted for %d, from leetchi contribution %d' %
                                 (c.pk, c.contribution_id))
@@ -99,10 +94,6 @@ def sync_refund(refund_id):
                     r.is_success = True
 
                     contribution = r.contribution
-
-                    # backward compatibility
-                    if contribution.wallet_id:
-                        contribution.content_object.set_status_cancelled()
                 else:
                     logger.info(u'[Refund]: set aborted for %d, from leetchi refund %d' %
                                 (r.pk, r.refund_id))

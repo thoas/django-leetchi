@@ -30,12 +30,17 @@ def transfer_refund(instance, user):
 def refund(instance, user):
     contenttype = ContentType.objects.get_for_model(instance)
 
-    contributions = Contribution.objects.filter(object_id=instance.pk, content_type=contenttype,
-                                                is_success=True, is_completed=True)
+    contributions = Contribution.objects.filter(object_id=instance.pk,
+                                                content_type=contenttype,
+                                                is_success=True,
+                                                is_completed=True)
 
-    refunds = queryset_to_dict((Refund.objects.filter(contribution__in=[contribution.pk for contribution in contributions])
-                                .filter(models.Q(is_success=True, is_completed=True) | models.Q(is_success=False, is_completed=False))),
-                               key='contribution_id', singular=False)
+    contribution_ids = [contribution.pk for contribution in contributions]
+
+    qs = (Refund.objects.filter(contribution__in=contribution_ids)
+          .filter(models.Q(is_success=True, is_completed=True) | models.Q(is_success=False, is_completed=False)))
+
+    refunds = queryset_to_dict(qs, key='contribution_id', singular=False)
 
     refund_list = []
 

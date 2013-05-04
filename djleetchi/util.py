@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core import exceptions
 from django.utils.importlib import import_module
 
-CLASS_PATH_ERROR = 'pybb is unable to interpret settings value for %s. '\
+CLASS_PATH_ERROR = 'djleetchi is unable to interpret settings value for %s. '\
                    '%s should be in the form of a tupple: '\
                    '(\'path.to.models.Class\', \'app_label\').'
 

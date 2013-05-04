@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
@@ -9,13 +8,9 @@ from django.utils.translation import ugettext_lazy as _
 from djleetchi.fields import ResourceField
 from djleetchi.api import handler
 from djleetchi.helpers import get_payer
+from djleetchi.compat import User
 
-from leetchi.resources import (Contribution as LeetchiContribution,
-                               Transfer as LeetchiTransfer,
-                               Refund as LeetchiRefund,
-                               Withdrawal as LeetchiWithdrawal,
-                               TransferRefund as LeetchiTransferRefund,
-                               Wallet as LeetchiWallet)
+from leetchi import resources
 
 
 class BaseLeetchi(models.Model):
@@ -32,6 +27,16 @@ class BaseLeetchi(models.Model):
                               self.content_type.model,
                               self.object_id)
 
+    def sync(self, async=False, commit=False):
+        parameters = self.request_parameters()
+
+        field_name = self._meta.resource_field
+        resource = self._meta.get_field(field_name).to(**parameters)
+        setattr(self, field_name, resource)
+
+        if commit:
+            self.save()
+
 
 class Contribution(BaseLeetchi):
     TYPE_PAYLINE = 1
@@ -41,8 +46,8 @@ class Contribution(BaseLeetchi):
         (TYPE_OGONE, 'Ogone'),
     )
 
-    contribution = ResourceField(LeetchiContribution)
-    wallet = ResourceField(LeetchiWallet)
+    contribution = ResourceField(resources.Contribution)
+    wallet = ResourceField(resources.Wallet)
     amount = models.IntegerField()
     user = models.ForeignKey(User)
     client_fee_amount = models.IntegerField(default=0)
@@ -51,168 +56,118 @@ class Contribution(BaseLeetchi):
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False)
     type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES,
-                                            default=TYPE_PAYLINE, verbose_name=_('Type'),
+                                            default=TYPE_PAYLINE,
+                                            verbose_name=_('Type'),
                                             db_index=True)
+
+    class Meta:
+        resource_field = 'contribution'
 
     @property
     def real_amount(self):
         return self.amount / 100
 
-    def save(self, **kwargs):
-        if not self.pk and not self.contribution_id:
-            account_user = self.user
+    def request_parameters(self):
+        user = get_payer(self.user)
 
-            if 'user' in kwargs:
-                account_user = kwargs.pop('user')
+        data = {
+            'user': user,
+            'amount': self.amount,
+            'client_fee_amount': self.client_fee_amount,
+            'return_url': self.return_url,
+            'wallet_id': self.wallet_id,
+            'tag': self.get_tag(),
+            'template_url': self.template_url
+        }
 
-            user = get_payer(account_user)
+        if self.type:
+            data['type'] = self.get_type_display()
 
-            data = {
-                'user': user,
-                'amount': self.amount,
-                'client_fee_amount': self.client_fee_amount,
-                'return_url': self.return_url,
-                'wallet_id': self.wallet_id,
-                'tag': self.get_tag()
-            }
+        return data
 
-            if hasattr(self, 'type') and self.type:
-                data['type'] = self.get_type_display()
+    def sync_status(self, commit=True):
+        contribution = self.contribution
 
-            if hasattr(self, 'culture') and self.culture:
-                data['culture'] = self.culture
+        if contribution.is_success():
+            self.is_success = True
+            self.is_completed = True
 
-            if self.template_url:
-                data['template_url'] = self.template_url
-
-            contribution = LeetchiContribution(**data)
-
-            contribution.save(handler)
-
-            self.contribution = contribution
-
-        super(Contribution, self).save(**kwargs)
-
-
-class TransferManager(models.Manager):
-    def create_from_transfer(self, transfer, payer, wallet, beneficiary, content_object=None, commit=True):
-        if isinstance(transfer, int):
-            transfer = LeetchiTransfer.get(transfer, handler)
-
-        klass = self.model
-
-        resource = klass()
-        resource.transfer = transfer
-        resource.amount = transfer.amount
-        resource.payer = payer
-
-        if not content_object:
-            tag = transfer.tag
-
-            app, pk = tag.split(':')
-            model_class = models.model(*app.split('.'))
-
-            content_object = model_class.objects.get(pk=pk)
-
-        resource.content_object = content_object
-        resource.beneficiary_wallet = wallet
-        resource.beneficiary = beneficiary
+        elif contribution.is_completed and not contribution.is_succeeded:
+            self.is_success = False
+            self.is_completed = True
 
         if commit:
-            resource.save()
+            self.save()
 
-        return resource
+    def is_error(self):
+        return not self.is_success and self.is_completed
 
 
 class Transfer(BaseLeetchi):
-    transfer = ResourceField(LeetchiTransfer)
-    beneficiary_wallet = ResourceField(LeetchiWallet)
+    transfer = ResourceField(resources.Transfer)
+    beneficiary_wallet = ResourceField(resources.Wallet)
     payer = models.ForeignKey(User, related_name='payers')
     beneficiary = models.ForeignKey(User, related_name='beneficiaries')
     amount = models.IntegerField()
 
-    objects = TransferManager()
+    class Meta:
+        resource_field = 'transfer'
 
-    def save(self, **kwargs):
-        if not self.pk and not self.transfer_id:
-            payer = get_payer(self.payer)
+    def request_parameters(self):
+        payer = get_payer(self.payer)
 
-            beneficiary = get_payer(self.beneficiary)
+        beneficiary = get_payer(self.beneficiary)
 
-            transfer = LeetchiTransfer(**{
-                'payer': payer,
-                'beneficiary': beneficiary,
-                'tag': self.get_tag(),
-                'amount': self.amount,
-                'beneficiary_wallet_id': self.beneficiary_wallet_id
-            })
-
-            transfer.save(handler)
-
-            self.transfer = transfer
-
-        super(Transfer, self).save(**kwargs)
+        return {
+            'payer': payer,
+            'beneficiary': beneficiary,
+            'tag': self.get_tag(),
+            'amount': self.amount,
+            'beneficiary_wallet_id': self.beneficiary_wallet_id
+        }
 
 
 class TransferRefund(BaseLeetchi):
-    transfer_refund = ResourceField(LeetchiTransferRefund)
+    transfer_refund = ResourceField(resources.TransferRefund)
     transfer = models.ForeignKey(Transfer)
     user = models.ForeignKey(User)
 
     class Meta:
         verbose_name = 'transferrefund'
+        resource_field = 'transfer_refund'
 
-    def save(self, **kwargs):
-        if not self.pk and not self.transfer_refund_id:
-            user = get_payer(self.user)
+    def request_parameters(self):
+        user = get_payer(self.user)
 
-            transfer_refund = LeetchiTransferRefund(**{
-                'user': user,
-                'transfer': self.get_transfer(),
-                'tag': self.get_tag()
-            })
-
-            transfer_refund.save(handler)
-
-            self.transfer_refund = transfer_refund
-
-        super(TransferRefund, self).save(**kwargs)
-
-    def get_transfer(self):
-        return self.transfer.transfer
+        return {
+            'user': user,
+            'transfer': self.transfer.transfer,
+            'tag': self.get_tag()
+        }
 
 
 class Refund(BaseLeetchi):
     user = models.ForeignKey(User)
-    refund = ResourceField(LeetchiRefund)
+    refund = ResourceField(resources.Refund)
     contribution = models.ForeignKey(Contribution)
     is_success = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
 
-    def save(self, **kwargs):
-        if not self.pk and not self.refund_id:
-            user = get_payer(self.user)
+    class Meta:
+        resource_field = 'refund'
 
-            refund = LeetchiRefund(**{
-                'user': user,
-                'contribution': self.get_contribution(),
-                'tag': self.get_tag(),
-            })
-
-            refund.save(handler)
-
-            self.refund = refund
-
-        super(Refund, self).save(**kwargs)
-
-    def get_contribution(self):
-        return self.contribution.contribution
+    def request_parameters(self):
+        return {
+            'user': get_payer(self.user),
+            'contribution': self.contribution.contribution,
+            'tag': self.get_tag()
+        }
 
 
 class Withdrawal(BaseLeetchi):
-    withdrawal = ResourceField(LeetchiWithdrawal)
+    withdrawal = ResourceField(resources.Withdrawal)
 
 
 class Wallet(BaseLeetchi):
-    wallet = ResourceField(LeetchiWallet, null=True, blank=True)
+    wallet = ResourceField(resources.Wallet, null=True, blank=True)
     amount = models.IntegerField(null=True, blank=True)
