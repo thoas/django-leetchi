@@ -119,4 +119,9 @@ def sync_resource(klass, resource_id):
         logger.error(u'Resource %s with id %s does not exists' %
                      (klass.__name__, resource_id))
     else:
-        instance.sync()
+        try:
+            instance.sync()
+        except (APIError, DecodeError) as exc:
+            logger.error(exc)
+
+            raise sync_resource.retry(exc=exc, countdown=60)
