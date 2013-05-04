@@ -174,6 +174,19 @@ class Refund(BaseLeetchi):
 
 
 class Withdrawal(BaseLeetchi):
+    amount = models.IntegerField(help_text=_(u'Amount to transfer (in cents, ex: 51900)'),
+                                 null=True)
+    client_fee_amount = models.IntegerField(help_text=_(u'Amount to transfer with tax (ex: 4152 = 51900 * 8%)'),
+                                            null=True)
+    bank_account_owner_name = models.CharField(help_text=_(u'Name of bank account owner'),
+                                               null=True)
+    bank_account_owner_address = models.CharField(help_text=_(u'Address of bank account owner'),
+                                                  null=True)
+    bank_account_iban = models.CharField(help_text=_(u'IBAN of bank account owner'),
+                                         null=True)
+    bank_account_bic = models.CharField(help_text=_(u'BIC of bank account owner'),
+                                        null=True)
+
     withdrawal = ResourceField(resources.Withdrawal)
 
 
