@@ -29,13 +29,16 @@ class BaseLeetchi(models.Model):
                               self.object_id)
 
     def sync(self, async=False, commit=True):
-        parameters = self.request_parameters()
-
-        field_name = self._meta.resource_field
-        resource = self._meta.get_field(field_name).to(**parameters)
-        setattr(self, field_name, resource)
-
         if async is False:
+
+            parameters = self.request_parameters()
+
+            field_name = self._meta.resource_field
+
+            resource = self._meta.get_field(field_name).to(**parameters)
+
+            setattr(self, field_name, resource)
+
             if commit:
                 self.save()
         else:
