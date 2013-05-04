@@ -109,3 +109,14 @@ def sync_refund(refund_id):
 
     except (APIError, DecodeError), e:
         logger.error(e)
+
+
+@task
+def sync_resource(klass, resource_id):
+    try:
+        instance = klass.objects.get(pk=resource_id)
+    except klass.DoesNotExist:
+        logger.error(u'Resource %s with id %s does not exists' %
+                     (klass.__name__, resource_id))
+    else:
+        instance.sync()

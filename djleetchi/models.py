@@ -9,6 +9,7 @@ from djleetchi.fields import ResourceField
 from djleetchi.api import handler
 from djleetchi.helpers import get_payer
 from djleetchi.compat import User
+from djleetchi.tasks import sync_resource
 
 from leetchi import resources
 
@@ -27,15 +28,20 @@ class BaseLeetchi(models.Model):
                               self.content_type.model,
                               self.object_id)
 
-    def sync(self, async=False, commit=False):
+    def sync(self, async=False, commit=True):
         parameters = self.request_parameters()
 
         field_name = self._meta.resource_field
         resource = self._meta.get_field(field_name).to(**parameters)
         setattr(self, field_name, resource)
 
-        if commit:
+        if async is False:
+            if commit:
+                self.save()
+        else:
             self.save()
+
+            sync_resource.delay(self.__class__, self.pk)
 
 
 class Contribution(BaseLeetchi):
@@ -71,7 +77,7 @@ class Contribution(BaseLeetchi):
         user = get_payer(self.user)
 
         data = {
-            'user': user,
+            'user_id': user.get_pk(),
             'amount': self.amount,
             'client_fee_amount': self.client_fee_amount,
             'return_url': self.return_url,
@@ -119,8 +125,8 @@ class Transfer(BaseLeetchi):
         beneficiary = get_payer(self.beneficiary)
 
         return {
-            'payer': payer,
-            'beneficiary': beneficiary,
+            'payer_id': payer.get_pk(),
+            'beneficiary_id': beneficiary.get_pk(),
             'tag': self.get_tag(),
             'amount': self.amount,
             'beneficiary_wallet_id': self.beneficiary_wallet_id
@@ -140,8 +146,8 @@ class TransferRefund(BaseLeetchi):
         user = get_payer(self.user)
 
         return {
-            'user': user,
-            'transfer': self.transfer.transfer,
+            'user_id': user.get_pk(),
+            'transfer_id': self.transfer.transfer_id,
             'tag': self.get_tag()
         }
 
@@ -158,8 +164,8 @@ class Refund(BaseLeetchi):
 
     def request_parameters(self):
         return {
-            'user': get_payer(self.user),
-            'contribution': self.contribution.contribution,
+            'user_id': get_payer(self.user).get_pk(),
+            'contribution_id': self.contribution.contribution_id,
             'tag': self.get_tag()
         }
 
