@@ -3,16 +3,15 @@ import logging
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from djleetchi.api import handler
-from djleetchi.helpers import get_payer
+from .helpers import get_payer
+from .models import Withdrawal, Transfer, Contribution
 
 from leetchi.exceptions import APIError, DecodeError
-from leetchi import resources
 
 logger_leetchi = logging.getLogger('leetchi')
 
 
-class NewWithdrawalForm(models.ModelForm):
+class NewWithdrawalForm(forms.ModelForm):
 
     class Meta:
         model = Withdrawal
@@ -61,7 +60,7 @@ class NewContributionForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         try:
             self.instance.content_object = self.content_object
-            self.instance.user = request.user
+            self.instance.user = self.user
             self.instance.wallet_id = 0
             self.instance.amount = int(float(self.cleaned_data.get('amount')) * 100)
             self.instance.return_url = kwargs.pop('return_url', None)

@@ -1,6 +1,6 @@
 from django.db import models
 
-from djleetchi.api import handler
+from .api import handler
 
 
 class ResourceField(models.IntegerField):

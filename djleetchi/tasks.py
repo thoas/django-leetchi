@@ -10,7 +10,7 @@ class SyncContributionsTask(PeriodicTask):
     run_every = timedelta(minutes=25)
 
     def run(self, **kwargs):
-        from djleetchi.models import Contribution
+        from .models import Contribution
 
         contributions = Contribution.objects.filter(is_completed=False).values_list('id')
 
@@ -25,7 +25,7 @@ class SyncContributionsTask(PeriodicTask):
 
 @task
 def sync_contribution(contribution_id):
-    from djleetchi.models import Contribution
+    from .models import Contribution
 
     logger = sync_contribution.get_logger()
 
@@ -62,7 +62,7 @@ class SyncRefundsTask(PeriodicTask):
     run_every = timedelta(minutes=25)
 
     def run(self, **kwargs):
-        from djleetchi.models import Refund
+        from .models import Refund
 
         refunds = Refund.objects.filter(is_completed=False).values_list('id')
 
@@ -77,7 +77,7 @@ class SyncRefundsTask(PeriodicTask):
 
 @task
 def sync_refund(refund_id):
-    from djleetchi.models import Refund
+    from .models import Refund
 
     logger = sync_refund.get_logger()
 
@@ -92,8 +92,6 @@ def sync_refund(refund_id):
                     logger.info(u'[Refund]: set succeeded for %d, from leetchi refund %d' %
                                 (r.pk, r.refund_id))
                     r.is_success = True
-
-                    contribution = r.contribution
                 else:
                     logger.info(u'[Refund]: set aborted for %d, from leetchi refund %d' %
                                 (r.pk, r.refund_id))

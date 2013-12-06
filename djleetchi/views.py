@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-import datetime
-
 from django.views.generic.base import View
 from django.http import HttpResponseServerError, Http404
 
 from leetchi import resources
 from leetchi.base import DoesNotExist as ResourceDoesNotExist
 
-from djleetchi.api import handler
-from djleetchi.util import JSONResponse
-from djleetchi.encoders import JSONEncoder
+from .api import handler
+from .util import JSONResponse
+from .encoders import JSONEncoder
 
 
 class BaseResourceDetailView(View):

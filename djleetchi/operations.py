@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 
-from djleetchi.models import TransferRefund, Transfer, Contribution, Refund
-from djleetchi.helpers import queryset_to_dict
+from .models import TransferRefund, Transfer, Contribution, Refund
+from .helpers import queryset_to_dict
 
 
 def transfer_refund(instance, user):

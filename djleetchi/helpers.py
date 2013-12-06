@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-from djleetchi.util import load_class
+from .util import load_class
 
 
 def queryset_to_dict(qs, key='pk', singular=True):

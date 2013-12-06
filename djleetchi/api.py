@@ -2,7 +2,7 @@ from django.utils.functional import memoize
 
 from leetchi.api import LeetchiAPI
 
-from djleetchi import settings
+from . import settings
 
 
 def _get_handler():

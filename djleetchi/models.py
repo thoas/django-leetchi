@@ -5,11 +5,10 @@ from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
-from djleetchi.fields import ResourceField
-from djleetchi.api import handler
-from djleetchi.helpers import get_payer
-from djleetchi.compat import User
-from djleetchi.tasks import sync_resource
+from .fields import ResourceField
+from .helpers import get_payer
+from .compat import User
+from .tasks import sync_resource
 
 from leetchi import resources
 
@@ -190,6 +189,78 @@ class Withdrawal(BaseLeetchi):
     withdrawal = ResourceField(resources.Withdrawal)
 
 
+class WalletManager(models.Manager):
+    def get_for_model(self, instance):
+        try:
+            content_type = ContentType.objects.get_for_model(instance)
+            return (self.filter(content_type=content_type,
+                                object_id=instance.pk)
+                    .order_by('creation_date')[0])
+        except IndexError:
+            return None
+
+
 class Wallet(BaseLeetchi):
+    user = ResourceField(resources.User, null=True, blank=True)
     wallet = ResourceField(resources.Wallet, null=True, blank=True)
     amount = models.IntegerField(null=True, blank=True)
+    last_synced = models.DateTimeField(null=True, blank=True)
+
+    objects = WalletManager()
+
+    class Meta:
+        unique_together = (
+            ('wallet', 'content_type', 'object_id'),
+        )
+        db_table = 'leetchi_wallet'
+
+
+class Beneficiary(models.Model):
+    user = models.ForeignKey(User)
+    beneficiary = ResourceField(resources.Beneficiary)
+    bank_account_owner_name = models.CharField(max_length=255)
+    bank_account_owner_address = models.CharField(max_length=255)
+    bank_account_iban = models.CharField(max_length=100)
+    bank_account_bic = models.CharField(max_length=100)
+    creation_date = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        db_table = 'leetchi_beneficiary'
+        resource_field = 'beneficiary'
+
+    def request_parameters(self):
+        return {
+            'user': get_payer(self.user),
+            'bank_account_bic': self.bank_account_bic,
+            'bank_account_iban': self.bank_account_iban,
+            'bank_account_owner_address': self.bank_account_owner_address,
+            'bank_account_owner_name': self.bank_account_owner_name
+        }
+
+
+class StrongAuthentication(models.Model):
+    strong_authentication = ResourceField(resources.StrongAuthentication)
+
+    user = models.ForeignKey(User)
+    beneficiary = models.ForeignKey(Beneficiary,
+                                    related_name='strong_authentication',
+                                    null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+    is_succeeded = models.BooleanField(default=False)
+    creation_date = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        resource_field = 'strong_authentication'
+        db_table = 'leetchi_strongauthentication'
+
+    def request_parameters(self):
+        beneficiary = None
+
+        if self.beneficiary:
+            beneficiary = self.beneficiary.beneficiary_id
+
+        return {
+            'user': get_payer(self.user),
+            'beneficiary_id': beneficiary
+        }

@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, url
 from django.contrib.admin.views.decorators import staff_member_required
 
-from djleetchi import views
+from . import views
 
 urlpatterns = patterns(
     '',
