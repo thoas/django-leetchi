@@ -1,4 +1,4 @@
-import os
+import django
 
 DATABASES = {
     'default': {
@@ -21,13 +21,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.sites',
     'djleetchi',
-    'django_nose',
 ]
-
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 ROOT_URLCONF = 'djleetchi.urls'
 
-TEMPLATE_DIRS = (
-    os.path.join(os.path.dirname(__file__), 'templates')
-)
+if django.VERSION <= (1, 6):
+    TEST_RUNNER = 'discover_runner.DiscoverRunner'
+
+SECRET_KEY = 'blabla'
+
+try:
+    from .temp import *
+except ImportError:
+    pass

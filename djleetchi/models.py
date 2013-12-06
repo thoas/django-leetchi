@@ -32,7 +32,7 @@ class BaseLeetchi(models.Model):
 
             parameters = self.request_parameters()
 
-            field_name = self._meta.resource_field
+            field_name = self.Api.resource_field
 
             resource = self._meta.get_field(field_name).to(**parameters)
 
@@ -69,6 +69,9 @@ class Contribution(BaseLeetchi):
                                             db_index=True)
 
     class Meta:
+        db_table = 'leetchi_contribution'
+
+    class Api:
         resource_field = 'contribution'
 
     @property
@@ -119,6 +122,9 @@ class Transfer(BaseLeetchi):
     amount = models.IntegerField()
 
     class Meta:
+        db_table = 'leetchi_transfer'
+
+    class Api:
         resource_field = 'transfer'
 
     def request_parameters(self):
@@ -142,6 +148,8 @@ class TransferRefund(BaseLeetchi):
 
     class Meta:
         verbose_name = 'transferrefund'
+
+    class Api:
         resource_field = 'transfer_refund'
 
     def request_parameters(self):
@@ -161,8 +169,11 @@ class Refund(BaseLeetchi):
     is_success = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
 
-    class Meta:
+    class Api:
         resource_field = 'refund'
+
+    class Meta:
+        db_table = 'leetchi_refund'
 
     def request_parameters(self):
         return {
@@ -177,13 +188,17 @@ class Withdrawal(BaseLeetchi):
                                  null=True)
     client_fee_amount = models.IntegerField(help_text=_(u'Amount to transfer with tax (ex: 4152 = 51900 * 8%)'),
                                             null=True)
-    bank_account_owner_name = models.CharField(help_text=_(u'Name of bank account owner'),
+    bank_account_owner_name = models.CharField(max_length=255,
+                                               help_text=_(u'Name of bank account owner'),
                                                null=True)
-    bank_account_owner_address = models.CharField(help_text=_(u'Address of bank account owner'),
+    bank_account_owner_address = models.CharField(max_length=255,
+                                                  help_text=_(u'Address of bank account owner'),
                                                   null=True)
-    bank_account_iban = models.CharField(help_text=_(u'IBAN of bank account owner'),
+    bank_account_iban = models.CharField(max_length=255,
+                                         help_text=_(u'IBAN of bank account owner'),
                                          null=True)
-    bank_account_bic = models.CharField(help_text=_(u'BIC of bank account owner'),
+    bank_account_bic = models.CharField(max_length=255,
+                                        help_text=_(u'BIC of bank account owner'),
                                         null=True)
 
     withdrawal = ResourceField(resources.Withdrawal)
@@ -226,6 +241,8 @@ class Beneficiary(models.Model):
 
     class Meta:
         db_table = 'leetchi_beneficiary'
+
+    class Api:
         resource_field = 'beneficiary'
 
     def request_parameters(self):
@@ -251,8 +268,10 @@ class StrongAuthentication(models.Model):
     creation_date = models.DateTimeField(default=datetime.now)
 
     class Meta:
-        resource_field = 'strong_authentication'
         db_table = 'leetchi_strongauthentication'
+
+    class Api:
+        resource_field = 'strong_authentication'
 
     def request_parameters(self):
         beneficiary = None

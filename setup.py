@@ -20,6 +20,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'python-leetchi',
+        'six',
     ],
     zip_safe=False,
     include_package_data=True,
