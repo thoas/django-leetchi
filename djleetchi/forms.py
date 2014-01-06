@@ -8,7 +8,8 @@ from django.contrib.sites.models import Site
 
 from leetchi.exceptions import APIError, DecodeError
 
-from djleetchi.models import Contribution, Transfer, Beneficiary, Withdrawal
+from .models import Contribution, Transfer, Beneficiary, Withdrawal
+from .helpers import get_payer
 
 from django_iban.forms import IBANFormField, SWIFTBICFormField
 
@@ -163,7 +164,7 @@ class TransferForm(forms.Form):
 
     def clean_amount(self):
 
-        payer, created = self.user.get_payer()
+        payer = get_payer(self.user)
 
         amount = self.cleaned_data.get('amount')
 
@@ -181,7 +182,7 @@ class TransferForm(forms.Form):
         return amount
 
     def is_personal_amount_enough(self, amount):
-        payer, created = self.user.get_payer()
+        payer = get_payer(self.user)
 
         personal_amount = payer.personal_wallet_amount_converted
 
