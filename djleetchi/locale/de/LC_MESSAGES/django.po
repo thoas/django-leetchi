@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: djleetchi\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-01-06 10:51+0100\n"
+"POT-Creation-Date: 2014-01-06 05:13-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: __init__.py:5 __init__.py:6 __init__.py:7 __init__.py:8 __init__.py:9
-#: __init__.py:10
+#: constants.py:5 constants.py:6 constants.py:7 constants.py:8 constants.py:9
+#: constants.py:10
 msgid ""
 "Your bank account will not be charged. We invite you to renew your support "
 "now."
@@ -26,8 +26,8 @@ msgstr ""
 "Dein Bankkonto wird nicht belastet. Wir laden dich dazu ein, deine "
 "Unterstützung jetzt zu erneuern."
 
-#: __init__.py:12 __init__.py:16 __init__.py:20 __init__.py:24 __init__.py:28
-#: __init__.py:32
+#: constants.py:12 constants.py:16 constants.py:20 constants.py:24
+#: constants.py:28 constants.py:32
 msgid ""
 "It appears that your bank can not accept the payment, your account will not "
 "be charged. Thank you for trying again in a few hours / days or to contact "
@@ -36,8 +36,8 @@ msgstr ""
 "Es scheint, dass deine Bank die Zahlung nicht akzeptiert; dein Konto wird "
 "nicht belastet. Wende dich bitte in ein paar Stunden / Tagen an deine Bank."
 
-#: __init__.py:13 __init__.py:17 __init__.py:21 __init__.py:25 __init__.py:29
-#: __init__.py:33
+#: constants.py:13 constants.py:17 constants.py:21 constants.py:25
+#: constants.py:29 constants.py:33
 msgid ""
 "There are several possible explanations to this problem: you have exceeded "
 "your payment ceiling, your account does not have sufficient funds ..."
@@ -45,15 +45,15 @@ msgstr ""
 "Es gibt mehrere mögliche Erklärungen für dieses Problem: Du hast mit deiner "
 "Zahlung die Höchstgrenze überschritten, dein Konto ist nicht gedeckt ..."
 
-#: __init__.py:36 __init__.py:40 __init__.py:44 __init__.py:47 __init__.py:48
-#: __init__.py:49 __init__.py:50
+#: constants.py:36 constants.py:40 constants.py:44 constants.py:47
+#: constants.py:48 constants.py:49 constants.py:50
 msgid ""
 "Unfortunately, we are unable to accept your payment, your bank account will "
 "not be charged."
 msgstr ""
 "Deine Zahlung wird leider nicht akzeptiert, dein Konto wird nicht belastet."
 
-#: __init__.py:37 __init__.py:41 __init__.py:45
+#: constants.py:37 constants.py:41 constants.py:45
 msgid ""
 "If you contributed to projects on Ulule for more than 2500 euros during the "
 "calendar year, please contact the team Ulule (support@ulule.com) in order to "
@@ -62,7 +62,7 @@ msgstr ""
 "Wenn du Projekte auf Ulule mit mehr als 2500 EUR in einem Kalenderjahr "
 "beiträgst, kontaktiere bitte das Ulule-Team (support@ulule.com)."
 
-#: __init__.py:52
+#: constants.py:52
 msgid ""
 "It looks like you have faced difficulties when checking your credit card, "
 "your account will not be charged. This step is mandatory (3D-Secure "
@@ -73,7 +73,7 @@ msgstr ""
 "Dieser Schritt ist erforderlich (3D-Secure-Standard), um eine gesicherte "
 "Zahlungen zu gewährleisten."
 
-#: __init__.py:53
+#: constants.py:53
 msgid ""
 "Different ways exist to validate your payment with a 3D-Secure check: code "
 "received by SMS, birthday date, etc. We invite you to contact your bank to "
@@ -84,34 +84,38 @@ msgstr ""
 "bitte an deine Bank, um nähere Informationen über deine Karte zu erhalten.\n"
 " "
 
-#: __init__.py:55 __init__.py:56 __init__.py:57 __init__.py:58
+#: constants.py:55 constants.py:56 constants.py:57 constants.py:58
 msgid ""
 "It seems that credit card details provided are not correct. Please try again."
 msgstr ""
 "Es scheint, dass die Kreditkarten-Details nicht korrek sind. Bitte versuche "
 "es erneut."
 
-#: forms.py:21
+#: forms.py:19
 msgid "Name of the bank account owner"
 msgstr ""
 
-#: forms.py:23
+#: forms.py:21
 msgid "Address of the bank account owner"
 msgstr ""
 
-#: forms.py:25
+#: forms.py:23
 msgid "IBAN of the bank account owner"
 msgstr ""
 
-#: forms.py:27
+#: forms.py:25 forms.py:28
+msgid "Without spaces"
+msgstr ""
+
+#: forms.py:26
 msgid "BIC of the bank account owner"
 msgstr ""
 
-#: forms.py:41 forms.py:113 forms.py:157 models.py:324
+#: forms.py:41 forms.py:113 forms.py:155
 msgid "Amount"
 msgstr "Betrag"
 
-#: forms.py:41 forms.py:114 forms.py:158
+#: forms.py:41 forms.py:114 forms.py:156
 #, fuzzy
 msgid "Value in decimal, e.g. 20.50"
 msgstr "Wert in Decimal, z.B. 20.50e"
@@ -133,7 +137,7 @@ msgid ""
 "only %(personal_amount)s"
 msgstr ""
 
-#: forms.py:171
+#: forms.py:169
 #, python-format
 msgid ""
 "Your personal amount %(personal_amount)s is                               "
@@ -142,54 +146,31 @@ msgstr ""
 "Dein persönlicher Betrag %(personal_amount)s reicht nicht aus, um diesen "
 "Transfer %(amount)s durchzuführen"
 
-#: models.py:58
+#: models.py:74
 msgid "Type"
 msgstr "Art"
 
-#: models.py:247
-msgid "Bank account owner name"
-msgstr ""
-
-#: models.py:249
-msgid "Address of bank account owner"
-msgstr ""
-
-#: models.py:251
-msgid "IBAN of bank account owner"
-msgstr ""
-
-#: models.py:252 models.py:255
-msgid "Without spaces"
-msgstr ""
-
-#: models.py:254
-msgid "BIC of bank account owner"
-msgstr ""
-
-#: models.py:323
+#: models.py:248
 msgid "Amount to transfer (in cents, ex: 51900)"
 msgstr ""
 
-#: models.py:327
+#: models.py:250
 msgid "Amount to transfer with tax (ex: 4152 = 51900 * 8%)"
 msgstr ""
 
-#: models.py:328
 #, fuzzy
-msgid "Fee amount"
-msgstr "Betrag"
+#~ msgid "Fee amount"
+#~ msgstr "Betrag"
 
-#: views.py:55
-msgid "Il n'est pas possible de payer par carte bancaire"
-msgstr "Es ist nicht möglich, mit Kreditkarte bezahlen"
+#~ msgid "Il n'est pas possible de payer par carte bancaire"
+#~ msgstr "Es ist nicht möglich, mit Kreditkarte bezahlen"
 
-#: views.py:114
-msgid ""
-"Problème de connexion au système bancaire, merci de réessayer dans quelques "
-"minutes"
-msgstr ""
-"Problem bei der Verbindung zum Banking-System. Es in einigen Minuten erneut "
-"versuchen"
+#~ msgid ""
+#~ "Problème de connexion au système bancaire, merci de réessayer dans "
+#~ "quelques minutes"
+#~ msgstr ""
+#~ "Problem bei der Verbindung zum Banking-System. Es in einigen Minuten "
+#~ "erneut versuchen"
 
 #~ msgid "Value in decimal, e.g. 20.50e"
 #~ msgstr "Wert in Decimal, z.B. 20.50e"

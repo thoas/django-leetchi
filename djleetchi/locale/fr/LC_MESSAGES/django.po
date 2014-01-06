@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: djleetchi\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-01-06 10:51+0100\n"
+"POT-Creation-Date: 2014-01-06 05:13-0600\n"
 "PO-Revision-Date: 2013-04-11 15:34\n"
 "Last-Translator: Florent Messa <florent@ulule.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,82 +18,86 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "X-Translated-Using: django-rosetta 0.6.6\n"
 
-#: __init__.py:5 __init__.py:6 __init__.py:7 __init__.py:8 __init__.py:9
-#: __init__.py:10
+#: constants.py:5 constants.py:6 constants.py:7 constants.py:8 constants.py:9
+#: constants.py:10
 msgid ""
 "Your bank account will not be charged. We invite you to renew your support "
 "now."
 msgstr ""
 
-#: __init__.py:12 __init__.py:16 __init__.py:20 __init__.py:24 __init__.py:28
-#: __init__.py:32
+#: constants.py:12 constants.py:16 constants.py:20 constants.py:24
+#: constants.py:28 constants.py:32
 msgid ""
 "It appears that your bank can not accept the payment, your account will not "
 "be charged. Thank you for trying again in a few hours / days or to contact "
 "your bank."
 msgstr ""
 
-#: __init__.py:13 __init__.py:17 __init__.py:21 __init__.py:25 __init__.py:29
-#: __init__.py:33
+#: constants.py:13 constants.py:17 constants.py:21 constants.py:25
+#: constants.py:29 constants.py:33
 msgid ""
 "There are several possible explanations to this problem: you have exceeded "
 "your payment ceiling, your account does not have sufficient funds ..."
 msgstr ""
 
-#: __init__.py:36 __init__.py:40 __init__.py:44 __init__.py:47 __init__.py:48
-#: __init__.py:49 __init__.py:50
+#: constants.py:36 constants.py:40 constants.py:44 constants.py:47
+#: constants.py:48 constants.py:49 constants.py:50
 msgid ""
 "Unfortunately, we are unable to accept your payment, your bank account will "
 "not be charged."
 msgstr ""
 
-#: __init__.py:37 __init__.py:41 __init__.py:45
+#: constants.py:37 constants.py:41 constants.py:45
 msgid ""
 "If you contributed to projects on Ulule for more than 2500 euros during the "
 "calendar year, please contact the team Ulule (support@ulule.com) in order to "
 "uncap your user account."
 msgstr ""
 
-#: __init__.py:52
+#: constants.py:52
 msgid ""
 "It looks like you have faced difficulties when checking your credit card, "
 "your account will not be charged. This step is mandatory (3D-Secure "
 "standard) to ensure secured payments."
 msgstr ""
 
-#: __init__.py:53
+#: constants.py:53
 msgid ""
 "Different ways exist to validate your payment with a 3D-Secure check: code "
 "received by SMS, birthday date, etc. We invite you to contact your bank to "
 "know the process with your card."
 msgstr ""
 
-#: __init__.py:55 __init__.py:56 __init__.py:57 __init__.py:58
+#: constants.py:55 constants.py:56 constants.py:57 constants.py:58
 msgid ""
 "It seems that credit card details provided are not correct. Please try again."
 msgstr ""
 
-#: forms.py:21
+#: forms.py:19
 msgid "Name of the bank account owner"
 msgstr "Nom du propriétaire du compte bancaire"
 
-#: forms.py:23
+#: forms.py:21
 msgid "Address of the bank account owner"
 msgstr "Adresse postale du compte bancaire"
 
-#: forms.py:25
+#: forms.py:23
 msgid "IBAN of the bank account owner"
 msgstr "IBAN du propriétaire du compte bancaire"
 
-#: forms.py:27
+#: forms.py:25 forms.py:28
+msgid "Without spaces"
+msgstr "Remplissez ce champ sans aucun espace entre les caractères"
+
+#: forms.py:26
 msgid "BIC of the bank account owner"
 msgstr "BIC du propriétaire du compte bancaire"
 
-#: forms.py:41 forms.py:113 forms.py:157 models.py:324
+#: forms.py:41 forms.py:113 forms.py:155
 msgid "Amount"
 msgstr "Montant"
 
-#: forms.py:41 forms.py:114 forms.py:158
+#: forms.py:41 forms.py:114 forms.py:156
 msgid "Value in decimal, e.g. 20.50"
 msgstr "Valeur en décimal, par exemple : 20.50"
 
@@ -117,7 +121,7 @@ msgstr ""
 "%(withdrawal_amount)s de remboursement en cours et le montant sur votre "
 "porte monnaie électronique est que de %(personal_amount)s"
 
-#: forms.py:171
+#: forms.py:169
 #, python-format
 msgid ""
 "Your personal amount %(personal_amount)s is                               "
@@ -126,48 +130,29 @@ msgstr ""
 "Le montant que vous possédez %(personal_amount)s n'est pas suffisant pour "
 "effectuer ce transfert %(amount)s"
 
-#: models.py:58
+#: models.py:74
 msgid "Type"
 msgstr ""
 
-#: models.py:247
-msgid "Bank account owner name"
-msgstr "Nom du propriétaire du compte bancaire"
-
-#: models.py:249
-msgid "Address of bank account owner"
-msgstr "Adresse du propriétaire du compte bancaire"
-
-#: models.py:251
-msgid "IBAN of bank account owner"
-msgstr "IBAN du propriétaire du compte bancaire"
-
-#: models.py:252 models.py:255
-msgid "Without spaces"
-msgstr "Remplissez ce champ sans aucun espace entre les caractères"
-
-#: models.py:254
-msgid "BIC of bank account owner"
-msgstr "BIC du propriétaire du compte bancaire"
-
-#: models.py:323
+#: models.py:248
 msgid "Amount to transfer (in cents, ex: 51900)"
 msgstr "Montant à transferer (en centimes, ex : 51900)"
 
-#: models.py:327
+#: models.py:250
 msgid "Amount to transfer with tax (ex: 4152 = 51900 * 8%)"
 msgstr ""
 
-#: models.py:328
-msgid "Fee amount"
-msgstr "Taxe à prélever"
+#~ msgid "Bank account owner name"
+#~ msgstr "Nom du propriétaire du compte bancaire"
 
-#: views.py:55
-msgid "Il n'est pas possible de payer par carte bancaire"
-msgstr ""
+#~ msgid "Address of bank account owner"
+#~ msgstr "Adresse du propriétaire du compte bancaire"
 
-#: views.py:114
-msgid ""
-"Problème de connexion au système bancaire, merci de réessayer dans quelques "
-"minutes"
-msgstr ""
+#~ msgid "IBAN of bank account owner"
+#~ msgstr "IBAN du propriétaire du compte bancaire"
+
+#~ msgid "BIC of bank account owner"
+#~ msgstr "BIC du propriétaire du compte bancaire"
+
+#~ msgid "Fee amount"
+#~ msgstr "Taxe à prélever"
