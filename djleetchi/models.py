@@ -40,12 +40,12 @@ class BaseLeetchi(models.Model):
 
         if async is False:
 
-            parameters = self.request_parameters()
-
             field_name = self.Api.resource_field
 
             if self.resource_id is not None:
                 return False
+
+            parameters = self.request_parameters()
 
             resource = self._meta.get_field(field_name).to(**parameters)
             resource.save(handler)
