@@ -5,8 +5,7 @@ from leetchi.exceptions import APIError, DecodeError
 
 @task
 def create_strong_authentication(user_id, beneficiary_id=None):
-    from django.contrib.auth.models import User
-
+    from .compat import User
     from .models import StrongAuthentication, Beneficiary
 
     logger = create_strong_authentication.get_logger()
