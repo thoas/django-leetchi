@@ -90,7 +90,7 @@ class WithdrawalForm(forms.ModelForm):
             for k, v in self.cleaned_data.items():
                 setattr(beneficiary, k, v)
 
-            beneficiary.save()
+            beneficiary.save(sync=True)
 
             self.instance.beneficiary = beneficiary
 
@@ -143,7 +143,7 @@ class ContributionForm(forms.Form):
 
             contribution.template_url = template_url
 
-            contribution.save(user=user)
+            contribution.save(user=user, sync=True)
         except (APIError, DecodeError), e:
             logger_leetchi.error(e)
             return False
