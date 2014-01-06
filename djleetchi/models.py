@@ -33,6 +33,9 @@ class BaseLeetchi(models.Model):
         return getattr(self, '%s_id' % self.Api.resource_field)
 
     def sync(self, async=False, commit=True):
+        if not hasattr(self, 'Api'):
+            return
+
         if async is False:
 
             parameters = self.request_parameters()
@@ -88,6 +91,13 @@ class Contribution(BaseLeetchi):
     class Api:
         resource_field = 'contribution'
 
+    def __init__(self, *args, **kwargs):
+        super(Contribution, self).__init__(*args, **kwargs)
+
+        self.type = None
+        self.culture = None
+        self.target = None
+
     @property
     def real_amount(self):
         return self.amount / 100
@@ -95,8 +105,13 @@ class Contribution(BaseLeetchi):
     def request_parameters(self):
         user = get_payer(self.user)
 
+        user_id = user.get_pk()
+
+        if self.target:
+            user = get_payer(self.target)
+
         data = {
-            'user_id': user.get_pk(),
+            'user_id': user_id,
             'amount': self.amount,
             'client_fee_amount': self.client_fee_amount,
             'return_url': self.return_url,
@@ -107,6 +122,12 @@ class Contribution(BaseLeetchi):
 
         if self.type:
             data['type'] = self.get_type_display()
+
+        if self.culture:
+            data['culture'] = self.culture
+
+        if self.template_url:
+            data['template_url'] = self.template_url
 
         return data
 

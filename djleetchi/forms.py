@@ -66,7 +66,8 @@ class WithdrawalForm(forms.ModelForm):
                 'amount': amount
             })
 
-        result = Withdrawal.objects.filter(user=self.user, is_completed=False).aggregate(amount=models.Sum('amount'))
+        result = (Withdrawal.objects.filter(user=self.user, is_completed=False)
+                  .aggregate(amount=models.Sum('amount')))
 
         withdrawal_amount = (result.get('amount', 0) or 0) / 100
 
@@ -135,6 +136,7 @@ class ContributionForm(forms.Form):
             contribution.wallet_id = 0
             contribution.amount = amount
             contribution.return_url = return_url
+            contribution.target = user
 
             template_url = u"https://%s%s" % (
                 unicode(absolute_url),
@@ -143,7 +145,7 @@ class ContributionForm(forms.Form):
 
             contribution.template_url = template_url
 
-            contribution.save(user=user, sync=True)
+            contribution.save(sync=True)
         except (APIError, DecodeError), e:
             logger_leetchi.error(e)
             return False
