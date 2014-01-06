@@ -1,12 +1,11 @@
 import sys
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
 from django.db import models
-from django.utils import timezone as datetime
 
 
 class Command(BaseCommand):
@@ -39,9 +38,9 @@ class Command(BaseCommand):
         from djleetchi.models import Wallet
 
         qs = Wallet.objects.filter(models.Q(last_synced__lte=datetime.now() - timedelta(minutes=options.get('gap'))) |
-                                   models.Q(last_synced__isnull=True)).order_by('last_synced', 'id')
+                                   models.Q(last_synced__isnull=True)).extra({'has_last_synced': 'CASE WHEN last_synced IS NULL THEN 0 ELSE 1 END'}).order_by('has_last_synced', 'last_synced', 'id')
 
-        limit = options.get('limit', qs.count())
+        limit = options.get('limit') or qs.count()
 
         for offset in range(0, limit, options.get('range')):
 
@@ -49,14 +48,11 @@ class Command(BaseCommand):
 
             for wallet in wallets:
                 try:
-                    user = wallet.user
+                    last_synced = wallet.last_synced
 
-                    wallet.amount = user.personal_wallet_amount
-                    wallet.last_synced = datetime.now()
+                    wallet.sync_amount()
 
-                    wallet.save(update_fields=('amount', 'last_synced'))
-
-                    print u'Sync wallet for user %s' % user
+                    print u'Sync wallet for user %s (last synced at %s)' % (wallet.user, last_synced)
 
                 except (APIError, DecodeError), e:
                     sys.stdout.write(e)
