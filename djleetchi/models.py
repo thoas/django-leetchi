@@ -36,13 +36,16 @@ class BaseLeetchi(models.Model):
 
     def sync(self, async=False, commit=True):
         if not hasattr(self, 'Api'):
-            return
+            return False
 
         if async is False:
 
             parameters = self.request_parameters()
 
             field_name = self.Api.resource_field
+
+            if self.resource_id is not None:
+                return False
 
             resource = self._meta.get_field(field_name).to(**parameters)
             resource.save(handler)
@@ -51,10 +54,12 @@ class BaseLeetchi(models.Model):
 
             if commit:
                 update_fields(self, fields=(field_name, ))
-        else:
-            self.save()
 
-            sync_resource.delay(self.__class__, self.pk)
+            return True
+
+        self.save()
+
+        sync_resource.delay(self.__class__, self.pk)
 
     def save(self, *args, **kwargs):
         sync = kwargs.pop('sync', settings.ALWAYS_SYNC)

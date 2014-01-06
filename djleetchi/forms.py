@@ -13,7 +13,7 @@ from .helpers import get_payer
 
 from django_iban.forms import IBANFormField, SWIFTBICFormField
 
-logger_leetchi = logging.getLogger('leetchi')
+logger = logging.getLogger('djleetchi')
 
 
 class WithdrawalForm(forms.ModelForm):
@@ -105,7 +105,7 @@ class WithdrawalForm(forms.ModelForm):
 
             super(WithdrawalForm, self).save()
         except (APIError, DecodeError), e:
-            logger_leetchi.error(e)
+            logger.error(e)
             return False
         else:
             return self.instance
@@ -148,7 +148,7 @@ class ContributionForm(forms.Form):
 
             contribution.save(sync=True)
         except (APIError, DecodeError), e:
-            logger_leetchi.error(e)
+            logger.error(e)
             return False
         else:
             return contribution
@@ -199,7 +199,7 @@ class TransferForm(forms.Form):
             transfer.beneficiary_wallet_id = 0
             transfer.save()
         except (APIError, DecodeError), e:
-            logger_leetchi.error(e)
+            logger.error(e)
             return False
         else:
             return transfer
