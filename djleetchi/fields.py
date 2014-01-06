@@ -4,7 +4,7 @@ from .api import handler
 
 
 class ResourceField(models.IntegerField):
-    def __init__(self, to, *args, **kwargs):
+    def __init__(self, to=None, *args, **kwargs):
         super(ResourceField, self).__init__(*args, **kwargs)
 
         self.to = to
@@ -58,3 +58,11 @@ class ReverseSingleRelatedObjectDescriptor(object):
         setattr(instance, self.field.attname, val)
 
         setattr(instance, self.field.get_cache_name(), value)
+
+
+try:
+    from south.modelsinspector import add_introspection_rules
+except ImportError:
+    pass
+else:
+    add_introspection_rules([], ["^djleetchi\.fields\.ResourceField"])

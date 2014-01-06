@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from django.db import models
+from django.utils import timezone as datetime
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
@@ -8,8 +7,9 @@ from django.db.models.signals import post_save
 
 from .fields import ResourceField
 from .helpers import get_payer
-from .compat import User
+from .compat import User, update_fields
 from .tasks import sync_resource, sync_amount
+from .api import handler
 
 from leetchi import resources
 
@@ -40,11 +40,12 @@ class BaseLeetchi(models.Model):
             field_name = self.Api.resource_field
 
             resource = self._meta.get_field(field_name).to(**parameters)
+            resource.save(handler)
 
             setattr(self, field_name, resource)
 
             if commit:
-                self.save()
+                update_fields(self, fields=(field_name, ))
         else:
             self.save()
 
@@ -59,7 +60,7 @@ class Contribution(BaseLeetchi):
         (TYPE_OGONE, 'Ogone'),
     )
 
-    contribution = ResourceField(resources.Contribution)
+    contribution = ResourceField(resources.Contribution, null=True)
     wallet = ResourceField(resources.Wallet)
     amount = models.IntegerField()
     user = models.ForeignKey(User)
@@ -113,14 +114,14 @@ class Contribution(BaseLeetchi):
             self.is_completed = True
 
         if commit:
-            self.save()
+            update_fields(self, fields=('is_success', 'is_completed', ))
 
     def is_error(self):
         return not self.is_success and self.is_completed
 
 
 class Transfer(BaseLeetchi):
-    transfer = ResourceField(resources.Transfer)
+    transfer = ResourceField(resources.Transfer, null=True)
     beneficiary_wallet = ResourceField(resources.Wallet)
     payer = models.ForeignKey(User, related_name='payers')
     beneficiary = models.ForeignKey(User, related_name='beneficiaries')
@@ -155,12 +156,13 @@ class Transfer(BaseLeetchi):
 
 
 class TransferRefund(BaseLeetchi):
-    transfer_refund = ResourceField(resources.TransferRefund)
+    transfer_refund = ResourceField(resources.TransferRefund, null=True)
     transfer = models.ForeignKey(Transfer)
     user = models.ForeignKey(User)
 
     class Meta:
         verbose_name = 'transferrefund'
+        db_table = 'leetchi_transferrefund'
 
     class Api:
         resource_field = 'transfer_refund'
@@ -177,7 +179,7 @@ class TransferRefund(BaseLeetchi):
 
 class Refund(BaseLeetchi):
     user = models.ForeignKey(User)
-    refund = ResourceField(resources.Refund)
+    refund = ResourceField(resources.Refund, null=True)
     contribution = models.ForeignKey(Contribution)
     is_success = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
@@ -219,7 +221,7 @@ class Refund(BaseLeetchi):
 
 class Beneficiary(models.Model):
     user = models.ForeignKey(User)
-    beneficiary = ResourceField(resources.Beneficiary)
+    beneficiary = ResourceField(resources.Beneficiary, null=True)
     bank_account_owner_name = models.CharField(max_length=255)
     bank_account_owner_address = models.CharField(max_length=255)
     bank_account_iban = models.CharField(max_length=100)
@@ -249,7 +251,7 @@ class Withdrawal(BaseLeetchi):
                                             null=True)
     beneficiary = models.ForeignKey(Beneficiary, null=True, blank=True)
 
-    withdrawal = ResourceField(resources.Withdrawal)
+    withdrawal = ResourceField(resources.Withdrawal, null=True)
 
     user = models.ForeignKey(User, null=True, blank=True)
     wallet = ResourceField(resources.Wallet, null=True, blank=True)
@@ -259,6 +261,9 @@ class Withdrawal(BaseLeetchi):
 
     class Api:
         resource_field = 'withdrawal'
+
+    class Meta:
+        db_table = 'leetchi_withdrawal'
 
     @property
     def is_success(self):
@@ -276,7 +281,7 @@ class Withdrawal(BaseLeetchi):
             setattr(self, field_name, getattr(withdrawal, field_name))
 
         if commit and changed:
-            self.save(update_fields=('is_succeeded', 'is_completed',))
+            update_fields(self, fields=('is_succeeded', 'is_completed', ))
 
     def request_parameters(self):
         params = {
@@ -346,7 +351,7 @@ class Wallet(BaseLeetchi):
         self.last_synced = datetime.now()
 
         if commit:
-            self.save(update_fields=('amount', 'last_synced'))
+            update_fields(self, fields=('amount', 'last_synced', ))
 
     @property
     def real_amount(self):
@@ -357,7 +362,7 @@ class Wallet(BaseLeetchi):
 
 
 class StrongAuthentication(models.Model):
-    strong_authentication = ResourceField(resources.StrongAuthentication)
+    strong_authentication = ResourceField(resources.StrongAuthentication, null=True)
 
     user = models.ForeignKey(User)
     beneficiary = models.ForeignKey(Beneficiary,

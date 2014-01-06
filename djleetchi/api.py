@@ -13,4 +13,4 @@ def _get_handler():
                       host=settings.API_HOST)
 
 
-handler = memoize(_get_handler, {}, 0)
+handler = memoize(_get_handler, {}, 0)()

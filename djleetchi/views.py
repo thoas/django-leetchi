@@ -6,7 +6,7 @@ from leetchi import resources
 from leetchi.base import DoesNotExist as ResourceDoesNotExist
 
 from .api import handler
-from .util import JSONResponse
+from .http import JSONResponse
 from .encoders import JSONEncoder
 
 
