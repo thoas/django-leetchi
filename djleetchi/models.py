@@ -51,6 +51,14 @@ class BaseLeetchi(models.Model):
 
             sync_resource.delay(self.__class__, self.pk)
 
+    def save(self, *args, **kwargs):
+        sync = kwargs.pop('sync', True)
+
+        if sync is True:
+            self.sync(commit=False)
+
+        return super(BaseLeetchi, self).save(*args, **kwargs)
+
 
 class Contribution(BaseLeetchi):
     TYPE_PAYLINE = 1

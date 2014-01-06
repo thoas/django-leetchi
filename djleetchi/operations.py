@@ -18,7 +18,7 @@ def transfer_refund(instance, user):
             transfer_refund.content_object = instance
             transfer_refund.transfer = transfer
             transfer_refund.user = user
-            transfer_refund.save()
+            transfer_refund.save(sync=True)
 
             transfer_refund_list.append(transfer_refund)
 
@@ -51,7 +51,7 @@ def refund(instance, user):
                 refund.content_object = instance
                 refund.contribution = contribution
                 refund.user = user
-                refund.save()
+                refund.save(sync=True)
 
                 refund_list.append(transfer_refund)
 
