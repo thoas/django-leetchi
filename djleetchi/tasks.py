@@ -1,127 +1,87 @@
-from celery.task import PeriodicTask, task
-from celery import group
+from celery.task import task
 
 from leetchi.exceptions import APIError, DecodeError
 
-from datetime import timedelta
-
-
-class SyncContributionsTask(PeriodicTask):
-    run_every = timedelta(minutes=25)
-
-    def run(self, **kwargs):
-        from .models import Contribution
-
-        contributions = Contribution.objects.filter(is_completed=False).values_list('id')
-
-        tasks = [sync_contribution.subtask(args=(c[0], )) for c in contributions]
-
-        job = group(tasks)
-
-        result = job.apply_async()
-
-        return result
-
 
 @task
-def sync_contribution(contribution_id):
-    from .models import Contribution
+def create_strong_authentication(user_id, beneficiary_id=None):
+    from django.contrib.auth.models import User
 
-    logger = sync_contribution.get_logger()
+    from .models import StrongAuthentication, Beneficiary
+
+    logger = create_strong_authentication.get_logger()
+
+    user = User.objects.get(pk=user_id)
+
+    beneficiary = None
+
+    if beneficiary_id:
+        beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+
+    auth = StrongAuthentication(user=user, beneficiary=beneficiary)
 
     try:
-
-        c = Contribution.objects.get(pk=contribution_id)
-
-        contribution = c.contribution
-
-        if contribution:
-            if contribution.is_completed:
-                if contribution.is_succeeded:
-                    logger.info(u'[Contribution]: set succeeded for %d, from leetchi contribution %d' %
-                                (c.pk, c.contribution_id))
-                    c.is_success = True
-                else:
-                    logger.info(u'[Contribution]: set aborted for %d, from leetchi contribution %d' %
-                                (c.pk, c.contribution_id))
-                    c.is_success = False
-
-                c.is_completed = True
-                c.save()
-            else:
-                logger.info(u'[Contribution]: do nothing for %d, from leetchi contribution %d' %
-                            (c.pk, c.contribution_id))
-        else:
-            logger.info(u'[Contribution]: can\'t reach n.%d' % (c.contribution_id))
-
-    except (APIError, DecodeError, Contribution.DoesNotExist), e:
-        logger.error(e)
-
-
-class SyncRefundsTask(PeriodicTask):
-    run_every = timedelta(minutes=25)
-
-    def run(self, **kwargs):
-        from .models import Refund
-
-        refunds = Refund.objects.filter(is_completed=False).values_list('id')
-
-        tasks = [sync_refund.subtask(args=(c[0], )) for c in refunds]
-
-        job = group(tasks)
-
-        result = job.apply_async()
-
-        return result
+        auth.save()
+    except APIError, exc:
+        logger.error(exc)
+    else:
+        return auth
 
 
 @task
-def sync_refund(refund_id):
-    from .models import Refund
+def sync_resource(resource_klass, resource_id):
+    from leetchi.base import DoesNotExist
 
-    logger = sync_refund.get_logger()
-
-    r = Refund.objects.get(pk=refund_id)
-
-    try:
-        refund = r.refund
-
-        if refund:
-            if refund.is_completed:
-                if refund.is_succeeded:
-                    logger.info(u'[Refund]: set succeeded for %d, from leetchi refund %d' %
-                                (r.pk, r.refund_id))
-                    r.is_success = True
-                else:
-                    logger.info(u'[Refund]: set aborted for %d, from leetchi refund %d' %
-                                (r.pk, r.refund_id))
-                    r.is_success = False
-
-                r.is_completed = True
-                r.save()
-            else:
-                logger.info(u'[Refund]: do nothing for %d, from leetchi refund %d' %
-                            (r.pk, r.refund_id))
-        else:
-            logger.info(u'[Refund]: can\'t reach n.%d' % (r.refund_id))
-
-    except (APIError, DecodeError), e:
-        logger.error(e)
-
-
-@task
-def sync_resource(klass, resource_id):
     logger = sync_resource.get_logger()
 
     try:
-        instance = klass.objects.get(pk=resource_id)
-    except klass.DoesNotExist:
-        logger.error(u'Resource %s with id %s does not exists' %
-                     (klass.__name__, resource_id))
-    else:
-        try:
-            instance.sync()
-        except (APIError, DecodeError) as exc:
-            logger.error(exc)
 
-            raise sync_resource.retry(exc=exc, countdown=60)
+        resource = resource_klass.objects.get(pk=resource_id)
+        resource.sync_status()
+
+        resource_name = resource_klass.__name__
+
+        if resource.is_completed:
+            if resource.is_success:
+                logger.info(u'[%s]: set succeeded for %d, from leetchi resource %d' %
+                            (resource_name, resource.pk, resource.resource_id))
+            else:
+                logger.info(u'[%s]: set aborted for %d, from leetchi resource %d' %
+                            (resource_name, resource.pk, resource.resource_id))
+        else:
+            logger.info(u'[%s]: do nothing for %d, from leetchi resource %d' %
+                        (resource_name, resource.pk, resource.resource_id))
+
+    except (APIError, DecodeError, DoesNotExist), e:
+        logger.error(e)
+
+
+@task
+def update_user(user_id, **kwargs):
+    from .compat import User
+    from .api import handler
+    from .models import Wallet
+
+    user = User.objects.get(pk=user_id)
+
+    wallet = Wallet.objects.get_for_model(user)
+
+    if wallet:
+        payer = wallet.user
+
+        for k, v in kwargs.items():
+            setattr(payer, k, v)
+
+        payer.save(handler)
+
+
+@task
+def sync_amount(wallet_id):
+    from .models import Wallet
+
+    logger = sync_amount.get_logger()
+
+    wallet = Wallet.objects.get(pk=wallet_id)
+    wallet.sync_amount()
+
+    logger.info('[Wallet] Syncing amount for %s' % wallet_id)

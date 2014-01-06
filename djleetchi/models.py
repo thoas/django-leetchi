@@ -4,11 +4,12 @@ from django.db import models
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
+from django.db.models.signals import post_save
 
 from .fields import ResourceField
 from .helpers import get_payer
 from .compat import User
-from .tasks import sync_resource
+from .tasks import sync_resource, sync_amount
 
 from leetchi import resources
 
@@ -26,6 +27,10 @@ class BaseLeetchi(models.Model):
         return u'%s.%s:%d' % (self.content_type.app_label,
                               self.content_type.model,
                               self.object_id)
+
+    @property
+    def resource_id(self):
+        return getattr(self, '%s_id' % self.Api.resource_field)
 
     def sync(self, async=False, commit=True):
         if async is False:
@@ -127,6 +132,14 @@ class Transfer(BaseLeetchi):
     class Api:
         resource_field = 'transfer'
 
+    @property
+    def user_id(self):
+        return self.payer_id
+
+    @property
+    def user(self):
+        return self.payer
+
     def request_parameters(self):
         payer = get_payer(self.payer)
 
@@ -182,52 +195,26 @@ class Refund(BaseLeetchi):
             'tag': self.get_tag()
         }
 
+    def get_contribution(self):
+        return self.contribution.contribution
 
-class Withdrawal(BaseLeetchi):
-    amount = models.IntegerField(help_text=_(u'Amount to transfer (in cents, ex: 51900)'),
-                                 null=True)
-    client_fee_amount = models.IntegerField(help_text=_(u'Amount to transfer with tax (ex: 4152 = 51900 * 8%)'),
-                                            null=True)
-    bank_account_owner_name = models.CharField(max_length=255,
-                                               help_text=_(u'Name of bank account owner'),
-                                               null=True)
-    bank_account_owner_address = models.CharField(max_length=255,
-                                                  help_text=_(u'Address of bank account owner'),
-                                                  null=True)
-    bank_account_iban = models.CharField(max_length=255,
-                                         help_text=_(u'IBAN of bank account owner'),
-                                         null=True)
-    bank_account_bic = models.CharField(max_length=255,
-                                        help_text=_(u'BIC of bank account owner'),
-                                        null=True)
+    def sync_status(self, commit=True):
+        refund = self.refund
 
-    withdrawal = ResourceField(resources.Withdrawal)
+        changed = False
 
+        if refund.is_success():
+            changed = True
+            self.is_success = True
+            self.is_completed = True
 
-class WalletManager(models.Manager):
-    def get_for_model(self, instance):
-        try:
-            content_type = ContentType.objects.get_for_model(instance)
-            return (self.filter(content_type=content_type,
-                                object_id=instance.pk)
-                    .order_by('creation_date')[0])
-        except IndexError:
-            return None
+        elif refund.is_completed and not refund.is_succeeded:
+            changed = True
+            self.is_success = False
+            self.is_completed = True
 
-
-class Wallet(BaseLeetchi):
-    user = ResourceField(resources.User, null=True, blank=True)
-    wallet = ResourceField(resources.Wallet, null=True, blank=True)
-    amount = models.IntegerField(null=True, blank=True)
-    last_synced = models.DateTimeField(null=True, blank=True)
-
-    objects = WalletManager()
-
-    class Meta:
-        unique_together = (
-            ('wallet', 'content_type', 'object_id'),
-        )
-        db_table = 'leetchi_wallet'
+        if commit and changed:
+            self.save(update_fields=('is_success', 'is_completed',))
 
 
 class Beneficiary(models.Model):
@@ -253,6 +240,120 @@ class Beneficiary(models.Model):
             'bank_account_owner_address': self.bank_account_owner_address,
             'bank_account_owner_name': self.bank_account_owner_name
         }
+
+
+class Withdrawal(BaseLeetchi):
+    amount = models.IntegerField(help_text=_(u'Amount to transfer (in cents, ex: 51900)'),
+                                 null=True)
+    client_fee_amount = models.IntegerField(help_text=_(u'Amount to transfer with tax (ex: 4152 = 51900 * 8%)'),
+                                            null=True)
+    beneficiary = models.ForeignKey(Beneficiary, null=True, blank=True)
+
+    withdrawal = ResourceField(resources.Withdrawal)
+
+    user = models.ForeignKey(User, null=True, blank=True)
+    wallet = ResourceField(resources.Wallet, null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+    is_succeeded = models.BooleanField(default=False)
+
+    class Api:
+        resource_field = 'withdrawal'
+
+    @property
+    def is_success(self):
+        return self.is_succeeded
+
+    def sync_status(self, commit=True):
+        withdrawal = self.withdrawal
+
+        changed = False
+
+        for field_name in ('is_succeeded', 'is_completed', ):
+            if getattr(self, field_name) == getattr(withdrawal, field_name):
+                continue
+
+            setattr(self, field_name, getattr(withdrawal, field_name))
+
+        if commit and changed:
+            self.save(update_fields=('is_succeeded', 'is_completed',))
+
+    def request_parameters(self):
+        params = {
+            'beneficiary_id': self.beneficiary.beneficiary_id,
+            'client_fee_amount': self.client_fee_amount or 0,
+            'amount': self.amount
+        }
+
+        if self.user_id:
+            user, created = self.user.get_payer()
+
+            params['user'] = user
+
+        if self.wallet_id:
+            params['wallet'] = self.wallet
+
+        return params
+
+
+class WalletManager(models.Manager):
+    def get_for_model(self, instance):
+        try:
+            content_type = ContentType.objects.get_for_model(instance)
+            return (self.filter(content_type=content_type,
+                                object_id=instance.pk)
+                    .order_by('creation_date')[0])
+        except IndexError:
+            return None
+
+    def contribute_to_class(self, cls, name):
+        post_save.connect(self.post_save, sender=Contribution)
+        post_save.connect(self.post_save, sender=Transfer)
+        post_save.connect(self.post_save, sender=TransferRefund)
+        post_save.connect(self.post_save, sender=Refund)
+        post_save.connect(self.post_save, sender=Withdrawal)
+        return super(WalletManager, self).contribute_to_class(cls, name)
+
+    def post_save(self, instance, **kwargs):
+        if instance.user_id:
+            wallet = self.get_for_model(instance.user)
+
+            if wallet:
+                sync_amount.delay(wallet.pk)
+
+
+class Wallet(BaseLeetchi):
+    user = ResourceField(resources.User, null=True, blank=True)
+    wallet = ResourceField(resources.Wallet, null=True, blank=True)
+    amount = models.IntegerField(null=True, blank=True)
+    last_synced = models.DateTimeField(null=True, blank=True)
+
+    objects = WalletManager()
+
+    class Meta:
+        unique_together = (
+            ('wallet', 'content_type', 'object_id'),
+        )
+        db_table = 'leetchi_wallet'
+
+    def sync_amount(self, commit=True, async=False):
+        if async is True:
+            return sync_amount.delay(self.pk)
+
+        user = self.user
+
+        self.amount = user.personal_wallet_amount
+        self.last_synced = datetime.now()
+
+        if commit:
+            self.save(update_fields=('amount', 'last_synced'))
+
+    @property
+    def real_amount(self):
+        if not self.amount:
+            return 0
+
+        return self.amount / 100.0
 
 
 class StrongAuthentication(models.Model):

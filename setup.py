@@ -21,6 +21,7 @@ setup(
     install_requires=[
         'python-leetchi',
         'six',
+        'django-iban',
     ],
     zip_safe=False,
     include_package_data=True,
