@@ -315,6 +315,8 @@ class Withdrawal(BaseLeetchi):
 
             setattr(self, field_name, getattr(withdrawal, field_name))
 
+            changed = True
+
         if commit and changed:
             update_fields(self, fields=('is_succeeded', 'is_completed', ))
 
