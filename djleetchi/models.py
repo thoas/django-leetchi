@@ -11,6 +11,8 @@ from .compat import User, update_fields
 from .tasks import sync_resource, sync_amount
 from .api import handler
 
+from . import settings
+
 from leetchi import resources
 
 
@@ -55,7 +57,7 @@ class BaseLeetchi(models.Model):
             sync_resource.delay(self.__class__, self.pk)
 
     def save(self, *args, **kwargs):
-        sync = kwargs.pop('sync', True)
+        sync = kwargs.pop('sync', settings.ALWAYS_SYNC)
 
         if sync is True:
             self.sync(commit=False)
@@ -94,7 +96,6 @@ class Contribution(BaseLeetchi):
     def __init__(self, *args, **kwargs):
         super(Contribution, self).__init__(*args, **kwargs)
 
-        self.type = None
         self.culture = None
         self.target = None
 
