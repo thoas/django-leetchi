@@ -251,7 +251,7 @@ class Refund(BaseLeetchi):
             self.is_completed = True
 
         if commit and changed:
-            self.save(update_fields=('is_success', 'is_completed',))
+            update_fields(self, fields=('is_success', 'is_completed',))
 
 
 class Beneficiary(models.Model):
