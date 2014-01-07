@@ -16,19 +16,9 @@ from . import settings
 from leetchi import resources
 
 
-class BaseLeetchi(models.Model):
-    object_id = models.PositiveIntegerField()
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-    content_type = models.ForeignKey(ContentType)
-    creation_date = models.DateTimeField(default=datetime.now)
-
+class ApiModel(models.Model):
     class Meta:
         abstract = True
-
-    def get_tag(self):
-        return u'%s.%s:%d' % (self.content_type.app_label,
-                              self.content_type.model,
-                              self.object_id)
 
     @property
     def resource_id(self):
@@ -68,6 +58,21 @@ class BaseLeetchi(models.Model):
             self.sync(commit=False)
 
         return super(BaseLeetchi, self).save(*args, **kwargs)
+
+
+class BaseLeetchi(ApiModel):
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_type = models.ForeignKey(ContentType)
+    creation_date = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        abstract = True
+
+    def get_tag(self):
+        return u'%s.%s:%d' % (self.content_type.app_label,
+                              self.content_type.model,
+                              self.object_id)
 
 
 class Contribution(BaseLeetchi):
@@ -254,7 +259,7 @@ class Refund(BaseLeetchi):
             update_fields(self, fields=('is_success', 'is_completed',))
 
 
-class Beneficiary(models.Model):
+class Beneficiary(ApiModel):
     user = models.ForeignKey(User)
     beneficiary = ResourceField(resources.Beneficiary, null=True)
     bank_account_owner_name = models.CharField(max_length=255)
@@ -398,7 +403,7 @@ class Wallet(BaseLeetchi):
         return self.amount / 100.0
 
 
-class StrongAuthentication(models.Model):
+class StrongAuthentication(ApiModel):
     strong_authentication = ResourceField(resources.StrongAuthentication, null=True)
 
     user = models.ForeignKey(User)
