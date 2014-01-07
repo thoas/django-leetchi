@@ -57,7 +57,7 @@ class ApiModel(models.Model):
         if sync is True:
             self.sync(commit=False)
 
-        return super(BaseLeetchi, self).save(*args, **kwargs)
+        return super(ApiModel, self).save(*args, **kwargs)
 
 
 class BaseLeetchi(ApiModel):
