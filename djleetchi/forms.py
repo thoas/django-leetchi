@@ -42,7 +42,7 @@ class WithdrawalForm(forms.ModelForm):
         self.fields['amount'] = forms.DecimalField(label=_('Amount'), help_text=_('Value in decimal, e.g. 20.50'))
 
     def is_personal_amount_enough(self, amount):
-        payer, created = self.user.get_payer()
+        payer = get_payer(self.user)
 
         personal_amount = payer.personal_wallet_amount_converted
 
@@ -54,7 +54,7 @@ class WithdrawalForm(forms.ModelForm):
         if self.content_object or not self.user:
             return amount
 
-        payer, created = self.user.get_payer()
+        payer = get_payer(self.user)
 
         amount_converted = payer.personal_wallet_amount_converted
 
