@@ -333,7 +333,7 @@ class Withdrawal(BaseLeetchi):
         }
 
         if self.user_id:
-            user, created = self.user.get_payer()
+            user = get_payer(self.user)
 
             params['user'] = user
 
