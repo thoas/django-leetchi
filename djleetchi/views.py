@@ -69,3 +69,12 @@ class WithdrawalDetailView(BaseResourceDetailView):
     attributes = ('creation_date', 'update_date', 'user_id', 'amount', 'client_fee_amount',
                   'wallet_id', 'is_succeeded', 'is_completed', 'error', 'bank_account_owner_name',
                   'bank_account_owner_address', 'bank_account_iban', 'bank_account_bic')
+
+
+class UserDetailView(BaseResourceDetailView):
+    resource_class = resources.User
+    resource_id = 'user_id'
+    attributes = ('email', 'id', 'personal_wallet_amount',
+                  'birthday', 'nationality')
+
+user_detail = UserDetailView.as_view()
