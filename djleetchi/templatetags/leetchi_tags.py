@@ -3,7 +3,8 @@ import re
 from django import template
 from django.contrib.contenttypes.models import ContentType
 
-from djleetchi.models import Contribution, Refund, Transfer, TransferRefund, Withdrawal
+from djleetchi.models import (Contribution, Refund, Wallet,
+                              Transfer, TransferRefund, Withdrawal)
 
 register = template.Library()
 
@@ -67,3 +68,8 @@ def get_transfers_for(parser, token):
 @register.tag
 def get_transferrefunds_for(parser, token):
     return get_resources_for(parser, token, TransferRefund)
+
+
+@register.tag
+def get_wallets_for(parser, token):
+    return get_resources_for(parser, token, Wallet)
