@@ -306,6 +306,13 @@ class Withdrawal(BaseLeetchi):
         db_table = 'leetchi_withdrawal'
 
     @property
+    def real_amount(self):
+        if not self.amount:
+            return 0
+
+        return self.amount / 100.0
+
+    @property
     def is_success(self):
         return self.is_succeeded
 
