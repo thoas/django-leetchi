@@ -373,7 +373,7 @@ class WalletManager(models.Manager):
             wallet = self.get_for_model(instance.user)
 
             if wallet:
-                sync_amount.delay(wallet.pk)
+                sync_amount.apply_async((wallet.pk, ), countdown=120)
 
 
 class Wallet(BaseLeetchi):
