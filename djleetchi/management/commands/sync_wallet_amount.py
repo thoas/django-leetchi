@@ -1,4 +1,5 @@
 import sys
+import time
 
 from datetime import datetime, timedelta
 
@@ -28,6 +29,12 @@ class Command(BaseCommand):
                     dest='limit',
                     default=None,
                     help='Limit wallets to sync'),
+        make_option('--sleep',
+                    action='store',
+                    type='float',
+                    dest='sleep',
+                    default=None,
+                    help='Sleep between each sync'),
     )
 
     can_import_settings = True
@@ -41,6 +48,7 @@ class Command(BaseCommand):
                                    models.Q(last_synced__isnull=True)).extra({'has_last_synced': 'CASE WHEN last_synced IS NULL THEN 0 ELSE 1 END'}).order_by('has_last_synced', 'last_synced', 'id')
 
         limit = options.get('limit') or qs.count()
+        sleep = options.get('sleep')
 
         for offset in range(0, limit, options.get('range')):
 
@@ -53,6 +61,9 @@ class Command(BaseCommand):
                     wallet.sync_amount()
 
                     print u'Sync wallet for user %s (last synced at %s)' % (wallet.user, last_synced)
+
+                    if sleep:
+                        time.sleep(sleep)
 
                 except (APIError, DecodeError), e:
                     sys.stdout.write(e)
