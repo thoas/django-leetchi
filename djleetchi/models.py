@@ -14,6 +14,7 @@ from .api import handler
 from . import settings
 
 from leetchi import resources
+from leetchi.base import DoesNotExist
 
 
 class ApiModel(models.Model):
@@ -96,6 +97,8 @@ class Contribution(BaseLeetchi):
                                             default=TYPE_PAYLINE,
                                             verbose_name=_('Type'),
                                             db_index=True)
+    card_expiration_date = models.DateField(null=True)
+    card_number = models.CharField(max_length=100, null=True)
 
     class Meta:
         db_table = 'leetchi_contribution'
@@ -153,8 +156,20 @@ class Contribution(BaseLeetchi):
             self.is_success = False
             self.is_completed = True
 
+        try:
+            payment_card = self.contribution.detail_payment_card
+        except DoesNotExist:
+            pass
+        else:
+            expiration_date = payment_card.expiration_date_converted
+
+            if expiration_date:
+                self.card_expiration_date = expiration_date
+
+            self.card_number = payment_card.number
+
         if commit:
-            update_fields(self, fields=('is_success', 'is_completed', ))
+            self.save()
 
     def is_error(self):
         return not self.is_success and self.is_completed

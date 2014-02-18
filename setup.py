@@ -19,9 +19,9 @@ setup(
     url='http://github.com/thoas/django-leetchi',
     packages=find_packages(),
     install_requires=[
-        'python-leetchi',
+        'python-leetchi==0.3.5',
         'six',
-        'django-iban',
+        'django-iban==0.2.5',
     ],
     zip_safe=False,
     include_package_data=True,
