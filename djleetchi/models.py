@@ -453,3 +453,17 @@ class StrongAuthentication(ApiModel):
             'user': get_payer(self.user),
             'beneficiary_id': beneficiary
         }
+
+
+def get_pending_amount(user):
+    result = (Withdrawal.objects.filter(user=user, is_completed=False)
+              .aggregate(amount=models.Sum('amount')))
+
+    amount = result.get('amount', 0) or 0
+
+    result = (Refund.objects.filter(user=user, is_completed=False)
+              .aggregate(amount=models.Sum('contribution__amount')))
+
+    amount += result.get('amount', 0) or 0
+
+    return amount

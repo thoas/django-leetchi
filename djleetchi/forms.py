@@ -1,14 +1,13 @@
 import logging
 
 from django import forms
-from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.sites.models import Site
 
 from leetchi.exceptions import APIError, DecodeError
 
-from .models import Contribution, Transfer, Beneficiary, Withdrawal
+from .models import Contribution, Transfer, Beneficiary, Withdrawal, get_pending_amount
 from .helpers import get_payer
 
 from django_iban.forms import IBANFormField, SWIFTBICFormField
@@ -67,10 +66,7 @@ class WithdrawalForm(forms.ModelForm):
                 'amount': amount
             })
 
-        result = (Withdrawal.objects.filter(user=self.user, is_completed=False)
-                  .aggregate(amount=models.Sum('amount')))
-
-        withdrawal_amount = (result.get('amount', 0) or 0) / 100
+        withdrawal_amount = get_pending_amount(self.user) / 100
 
         if withdrawal_amount:
             if not self.is_personal_amount_enough(amount + withdrawal_amount):
