@@ -1,9 +1,11 @@
 from django.db import models
-from django.utils import timezone as datetime
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_save
+from django.utils import timezone as datetime
+
+from dateutil.relativedelta import relativedelta
 
 from .fields import ResourceField
 from .helpers import get_payer
@@ -76,6 +78,31 @@ class BaseLeetchi(ApiModel):
                               self.object_id)
 
 
+class ContributionQuerySet(models.query.QuerySet):
+    def success(self):
+        return self.filter(is_success=True)
+
+    def refundable(self):
+        now = datetime.now()
+
+        qs = self.filter(creation_date__gt=now - relativedelta(months=10))
+
+        qs = qs.filter(models.Q(card_expiration_date__isnull=True) | models.Q(card_expiration_date__gt=now))
+
+        return qs
+
+
+class ContributionManager(models.Manager):
+    def get_query_set(self):
+        return ContributionQuerySet(self.model)
+
+    def success(self):
+        return self.get_query_set().success()
+
+    def refundable(self):
+        return self.get_query_set().refundable()
+
+
 class Contribution(BaseLeetchi):
     TYPE_PAYLINE = 1
     TYPE_OGONE = 2
@@ -99,6 +126,8 @@ class Contribution(BaseLeetchi):
                                             db_index=True)
     card_expiration_date = models.DateField(null=True)
     card_number = models.CharField(max_length=100, null=True)
+
+    objects = ContributionManager()
 
     class Meta:
         db_table = 'leetchi_contribution'

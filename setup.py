@@ -22,6 +22,7 @@ setup(
         'python-leetchi==0.3.5',
         'six',
         'django-iban==0.2.5',
+        'python-dateutil',
     ],
     zip_safe=False,
     include_package_data=True,
