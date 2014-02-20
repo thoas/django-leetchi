@@ -203,6 +203,12 @@ class Contribution(BaseLeetchi):
     def is_error(self):
         return not self.is_success and self.is_completed
 
+    def sync(self, *args, **kwargs):
+        result = super(Contribution, self).sync(*args, **kwargs)
+
+        if result:
+            self.sync_status(commit=False)
+
 
 class Transfer(BaseLeetchi):
     transfer = ResourceField(resources.Transfer, null=True)
@@ -301,6 +307,12 @@ class Refund(BaseLeetchi):
 
         if commit and changed:
             update_fields(self, fields=('is_success', 'is_completed',))
+
+    def sync(self, *args, **kwargs):
+        result = super(Refund, self).sync(*args, **kwargs)
+
+        if result:
+            self.sync_status(commit=False)
 
 
 class Beneficiary(ApiModel):
