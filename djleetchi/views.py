@@ -15,14 +15,31 @@ class BaseResourceDetailView(View):
 
         resource_id = int(kwargs.get(self.resource_id))
 
+        data = {}
+
         try:
             resource = self.resource_class.get(resource_id, handler)
         except ResourceDoesNotExist:
             raise Http404
         else:
             if resource:
-                data = dict((attribute, getattr(resource, attribute))
-                            for attribute in self.attributes)
+
+                for attribute in self.attributes:
+                    if '__' in attribute:
+                        attrs = attribute.split('__')
+
+                        method = resource
+
+                        for attr in attrs:
+                            if not hasattr(method, attr):
+                                continue
+
+                            method = getattr(method, attr)
+
+                            if attr == attrs[-1]:
+                                data[attribute] = method
+                    else:
+                        data[attribute] = getattr(resource, attribute)
 
             return JSONResponse(data, cls=JSONEncoder)
 
@@ -33,6 +50,9 @@ class ContributionDetailView(BaseResourceDetailView):
     resource_class = resources.Contribution
     resource_id = 'contribution_id'
     attributes = ('is_succeeded', 'is_completed', 'creation_date',
+                  'detail_payment_card__expiration_date',
+                  'detail_payment_card__number',
+                  'detail_payment_card__type',
                   'update_date', 'amount', 'id', 'error')
 
 
