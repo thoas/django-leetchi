@@ -190,12 +190,13 @@ class Contribution(BaseLeetchi):
         except DoesNotExist:
             pass
         else:
-            expiration_date = payment_card.expiration_date_converted
+            if payment_card:
+                expiration_date = payment_card.expiration_date_converted
 
-            if expiration_date:
-                self.card_expiration_date = expiration_date
+                if expiration_date:
+                    self.card_expiration_date = expiration_date
 
-            self.card_number = payment_card.number
+                self.card_number = payment_card.number
 
         if commit:
             self.save()
