@@ -22,7 +22,7 @@ def create_strong_authentication(user_id, beneficiary_id=None):
     try:
         auth.save()
     except APIError, exc:
-        logger.error(exc)
+        logger.exception(exc)
     else:
         return auth
 
@@ -52,7 +52,7 @@ def sync_resource(resource_klass, resource_id):
                         (resource_name, resource.pk, resource.resource_id))
 
     except (APIError, DecodeError, DoesNotExist), e:
-        logger.error(e)
+        logger.exception(e)
 
 
 @task
