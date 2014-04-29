@@ -51,7 +51,7 @@ class Command(BaseCommand):
 
             resource_ids = klass.objects.filter(is_completed=False).values_list('id', flat=True)[:limit]
 
-            tasks = [sync_resource.subtask(args=(klass, resource_id, )) for resource_id in resource_ids]
+            tasks = [sync_status.subtask(args=(klass, resource_id, )) for resource_id in resource_ids]
 
             job = group(tasks)
 

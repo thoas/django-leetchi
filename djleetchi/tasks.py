@@ -28,10 +28,10 @@ def create_strong_authentication(user_id, beneficiary_id=None):
 
 
 @task
-def sync_resource(resource_klass, resource_id):
+def sync_status(resource_klass, resource_id):
     from leetchi.base import DoesNotExist
 
-    logger = sync_resource.get_logger()
+    logger = sync_status.get_logger()
 
     try:
 
@@ -51,6 +51,25 @@ def sync_resource(resource_klass, resource_id):
             logger.info(u'[%s]: do nothing for %d, from leetchi resource %d' %
                         (resource_name, resource.pk, resource.resource_id))
 
+    except (APIError, DecodeError, DoesNotExist), e:
+        logger.exception(e)
+
+
+@task
+def sync_resource(resource_klass, resource_id):
+    from leetchi.base import DoesNotExist
+
+    logger = sync_resource.get_logger()
+
+    try:
+
+        resource = resource_klass.objects.get(pk=resource_id)
+        resource.sync()
+
+        resource_name = resource_klass.__name__
+
+        logger.info(u'[%s]: syncing %d, from leetchi resource %d' %
+                    (resource_name, resource.pk, resource.resource_id))
     except (APIError, DecodeError, DoesNotExist), e:
         logger.exception(e)
 

@@ -118,6 +118,7 @@ class Contribution(BaseLeetchi):
     client_fee_amount = models.IntegerField(default=0)
     return_url = models.CharField(null=True, blank=True, max_length=255)
     template_url = models.CharField(null=True, blank=True, max_length=255)
+    payment_url = models.CharField(null=True, blank=True, max_length=255)
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False)
     type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES,
@@ -126,6 +127,7 @@ class Contribution(BaseLeetchi):
                                             db_index=True)
     card_expiration_date = models.DateField(null=True)
     card_number = models.CharField(max_length=100, null=True)
+    culture = models.CharField(max_length=5, null=True)
 
     objects = ContributionManager()
 
@@ -138,7 +140,6 @@ class Contribution(BaseLeetchi):
     def __init__(self, *args, **kwargs):
         super(Contribution, self).__init__(*args, **kwargs)
 
-        self.culture = None
         self.target = None
 
     @property
@@ -208,7 +209,9 @@ class Contribution(BaseLeetchi):
         result = super(Contribution, self).sync(*args, **kwargs)
 
         if result:
-            self.sync_status(commit=False)
+            self.payment_url = self.contribution.payment_url
+
+            self.sync_status(commit=True)
 
 
 class Transfer(BaseLeetchi):
