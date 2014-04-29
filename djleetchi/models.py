@@ -50,9 +50,9 @@ class ApiModel(models.Model):
 
             return True
 
-        self.save()
+        self.save(sync=False)
 
-        return sync_resource.delay(self.__class__, self.pk)
+        sync_resource.delay(self.__class__, self.pk)
 
     def save(self, *args, **kwargs):
         sync = kwargs.pop('sync', settings.ALWAYS_SYNC)
