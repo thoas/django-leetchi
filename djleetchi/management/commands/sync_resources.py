@@ -32,7 +32,7 @@ class Command(BaseCommand):
         }
 
     def handle(self, *args, **options):
-        from djleetchi.tasks import sync_resource
+        from djleetchi.tasks import sync_status
 
         from celery import group
 
