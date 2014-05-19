@@ -144,7 +144,7 @@ class Contribution(BaseLeetchi):
 
     @property
     def real_amount(self):
-        return self.amount / 100
+        return self.amount / 100.0
 
     def request_parameters(self):
         user = get_payer(self.user)
