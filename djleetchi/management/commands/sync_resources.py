@@ -49,7 +49,12 @@ class Command(BaseCommand):
             if name and resource_name != name:
                 continue
 
-            resource_ids = klass.objects.filter(is_completed=False).values_list('id', flat=True)[:limit]
+            params = {
+                'is_completed': False,
+                '%s__isnull' % klass.Api.resource_field: False
+            }
+
+            resource_ids = klass.objects.filter(**params).values_list('id', flat=True)[:limit]
 
             tasks = [sync_status.subtask(args=(klass, resource_id, )) for resource_id in resource_ids]
 
