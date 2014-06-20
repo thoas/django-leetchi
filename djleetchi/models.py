@@ -118,7 +118,6 @@ class Contribution(BaseLeetchi):
     client_fee_amount = models.IntegerField(default=0)
     return_url = models.CharField(null=True, blank=True, max_length=255)
     template_url = models.CharField(null=True, blank=True, max_length=255)
-    payment_url = models.CharField(null=True, blank=True, max_length=255)
     is_completed = models.BooleanField(default=False)
     is_success = models.BooleanField(default=False)
     type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES,
@@ -209,8 +208,6 @@ class Contribution(BaseLeetchi):
         result = super(Contribution, self).sync(*args, **kwargs)
 
         if result:
-            self.payment_url = self.contribution.payment_url
-
             self.sync_status(commit=True)
 
 
