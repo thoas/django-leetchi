@@ -35,6 +35,7 @@ class WithdrawalForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         self.wallet = kwargs.pop('wallet', None)
         self.content_object = kwargs.pop('content_object', None)
+        self.sync = kwargs.pop('sync', True)
 
         super(WithdrawalForm, self).__init__(*args, **kwargs)
 
@@ -98,8 +99,7 @@ class WithdrawalForm(forms.ModelForm):
             self.instance.user = self.user
             self.instance.amount = self.cleaned_data['amount'] * 100
             self.instance.content_object = self.content_object or self.user
-
-            super(WithdrawalForm, self).save()
+            self.instance.save(sync=self.sync)
         except (APIError, DecodeError), e:
             logger.error(e)
             return False
