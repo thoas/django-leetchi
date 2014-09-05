@@ -4,7 +4,7 @@ from leetchi.exceptions import APIError, DecodeError
 
 
 @task
-def create_strong_authentication(user_id, beneficiary_id=None):
+def create_strong_authentication(user_id, beneficiary_id=None, fail_silently=True):
     from .compat import User
     from .models import StrongAuthentication, Beneficiary
 
@@ -23,6 +23,9 @@ def create_strong_authentication(user_id, beneficiary_id=None):
         auth.save()
     except APIError, exc:
         logger.exception(exc)
+
+        if not fail_silently:
+            raise exc
     else:
         return auth
 
