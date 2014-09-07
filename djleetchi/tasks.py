@@ -1,33 +1,45 @@
+import requests
+
 from celery.task import task
 
 from leetchi.exceptions import APIError, DecodeError
 
+from django.core.files.storage import default_storage as storage
+
 
 @task
-def create_strong_authentication(user_id, beneficiary_id=None, fail_silently=True):
+def create_strong_authentication(user_id, beneficiary_id, filepaths=None):
     from .compat import User
     from .models import StrongAuthentication, Beneficiary
+    from .api import handler
 
     logger = create_strong_authentication.get_logger()
 
     user = User.objects.get(pk=user_id)
 
-    beneficiary = None
-
-    if beneficiary_id:
-        beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+    beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
 
     auth = StrongAuthentication(user=user, beneficiary=beneficiary)
 
     try:
         auth.save()
+
+        if filepaths:
+            strong_authentication = auth.strong_authentication
+
+            for filepath in filepaths:
+                result = requests.post(strong_authentication.url_request, files={
+                    'StrongValidationDto.Picture': storage.open(filepath).file
+                })
+
+                logger.info(u'Uploading file for <User: %s> and <StrongAuthentication %s>: %s' % (user_id,
+                                                                                                  auth.pk,
+                                                                                                  result.status_code))
+
+            strong_authentication.is_transmitted = True
+            strong_authentication.save(handler)
     except APIError, exc:
         logger.exception(exc)
-
-        if not fail_silently:
-            raise exc
-    else:
-        return auth
 
 
 @task

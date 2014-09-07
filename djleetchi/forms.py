@@ -102,9 +102,12 @@ class WithdrawalForm(forms.ModelForm):
             self.instance.save(sync=self.sync)
         except (APIError, DecodeError), e:
             logger.error(e)
-            return False
+
+            self.instance.error = e
         else:
-            return self.instance
+            self.instance.error = None
+
+        return self.instance
 
 
 class ContributionForm(forms.Form):
