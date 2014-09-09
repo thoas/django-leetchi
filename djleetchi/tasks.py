@@ -29,7 +29,7 @@ def create_strong_authentication(user_id, beneficiary_id, filepaths=None):
 
             for filepath in filepaths:
                 result = requests.post(strong_authentication.url_request, files={
-                    'file': storage.open(filepath).file
+                    'StrongValidationDto.Picture': storage.open(filepath).file
                 })
 
                 logger.info(u'Uploading file for <User: %s> and <StrongAuthentication %s>: %s' % (user_id,
