@@ -12,7 +12,7 @@ from .helpers import get_payer
 
 from django_iban.forms import IBANFormField, SWIFTBICFormField
 
-logger = logging.getLogger('djleetchi')
+logger = logging.getLogger('django.leetchi')
 
 
 class WithdrawalForm(forms.ModelForm):
