@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import django
+
 from django.utils import translation
 from django.conf import settings
 from django.core import exceptions
@@ -71,3 +73,8 @@ def load_class(class_path, setting_name=None):
                 class_module, class_name)
         raise exceptions.ImproperlyConfigured(txt)
     return clazz
+
+if django.VERSION >= (1, 5):
+    update_fields = lambda instance, fields: instance.save(update_fields=fields)
+else:
+    update_fields = lambda instance, fields: instance.save()

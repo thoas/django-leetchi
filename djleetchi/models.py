@@ -4,19 +4,22 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_save
 from django.utils import timezone as datetime
+from django.conf import settings
 
 from dateutil.relativedelta import relativedelta
 
 from .fields import ResourceField
 from .helpers import get_payer
-from .compat import User, update_fields
 from .tasks import sync_resource, sync_amount
 from .api import handler
-
-from . import settings
+from .settings import ALWAYS_SYNC
+from .util import update_fields
 
 from leetchi import resources
 from leetchi.base import DoesNotExist
+
+
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
 class ApiModel(models.Model):
@@ -55,7 +58,7 @@ class ApiModel(models.Model):
         sync_resource.delay(self.__class__, self.pk)
 
     def save(self, *args, **kwargs):
-        sync = kwargs.pop('sync', settings.ALWAYS_SYNC)
+        sync = kwargs.pop('sync', ALWAYS_SYNC)
 
         if sync is True:
             self.sync(commit=False)
@@ -114,7 +117,7 @@ class Contribution(BaseLeetchi):
     contribution = ResourceField(resources.Contribution, null=True)
     wallet = ResourceField(resources.Wallet)
     amount = models.IntegerField()
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(AUTH_USER_MODEL)
     client_fee_amount = models.IntegerField(default=0)
     return_url = models.CharField(null=True, blank=True, max_length=255)
     template_url = models.CharField(null=True, blank=True, max_length=255)
@@ -214,8 +217,8 @@ class Contribution(BaseLeetchi):
 class Transfer(BaseLeetchi):
     transfer = ResourceField(resources.Transfer, null=True)
     beneficiary_wallet = ResourceField(resources.Wallet)
-    payer = models.ForeignKey(User, related_name='payers')
-    beneficiary = models.ForeignKey(User, related_name='beneficiaries')
+    payer = models.ForeignKey(AUTH_USER_MODEL, related_name='payers')
+    beneficiary = models.ForeignKey(AUTH_USER_MODEL, related_name='beneficiaries')
     amount = models.IntegerField()
 
     class Meta:
@@ -249,7 +252,7 @@ class Transfer(BaseLeetchi):
 class TransferRefund(BaseLeetchi):
     transfer_refund = ResourceField(resources.TransferRefund, null=True)
     transfer = models.ForeignKey(Transfer)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(AUTH_USER_MODEL)
 
     class Meta:
         verbose_name = 'transferrefund'
@@ -269,7 +272,7 @@ class TransferRefund(BaseLeetchi):
 
 
 class Refund(BaseLeetchi):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(AUTH_USER_MODEL)
     refund = ResourceField(resources.Refund, null=True)
     contribution = models.ForeignKey(Contribution)
     is_success = models.BooleanField(default=False)
@@ -317,7 +320,7 @@ class Refund(BaseLeetchi):
 
 
 class Beneficiary(ApiModel):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(AUTH_USER_MODEL)
     beneficiary = ResourceField(resources.Beneficiary, null=True)
     bank_account_owner_name = models.CharField(max_length=255)
     bank_account_owner_address = models.CharField(max_length=255)
@@ -350,7 +353,7 @@ class Withdrawal(BaseLeetchi):
 
     withdrawal = ResourceField(resources.Withdrawal, null=True)
 
-    user = models.ForeignKey(User, null=True, blank=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True)
     wallet = ResourceField(resources.Wallet, null=True, blank=True)
 
     is_completed = models.BooleanField(default=False)
@@ -470,7 +473,7 @@ class Wallet(BaseLeetchi):
 class StrongAuthentication(ApiModel):
     strong_authentication = ResourceField(resources.StrongAuthentication, null=True)
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(AUTH_USER_MODEL)
     beneficiary = models.ForeignKey(Beneficiary,
                                     related_name='strong_authentication',
                                     null=True, blank=True)
