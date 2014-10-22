@@ -151,10 +151,10 @@ class Contribution(BaseLeetchi):
     def request_parameters(self):
         user = get_payer(self.user)
 
-        user_id = user.get_pk()
-
         if self.target:
             user = get_payer(self.target)
+
+        user_id = user.get_pk()
 
         data = {
             'user_id': user_id,
