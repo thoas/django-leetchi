@@ -130,6 +130,7 @@ class Contribution(BaseLeetchi):
     card_expiration_date = models.DateField(null=True)
     card_number = models.CharField(max_length=100, null=True)
     culture = models.CharField(max_length=5, null=True)
+    payment_method_type = models.CharField(max_length=100, null=True)
 
     objects = ContributionManager()
 
@@ -163,8 +164,11 @@ class Contribution(BaseLeetchi):
             'return_url': self.return_url,
             'wallet_id': self.wallet_id,
             'tag': self.get_tag(),
-            'template_url': self.template_url
+            'template_url': self.template_url,
         }
+
+        if self.payment_method_type:
+            data['payment_method_type'] = self.payment_method_type
 
         if self.type:
             data['type'] = self.get_type_display()
