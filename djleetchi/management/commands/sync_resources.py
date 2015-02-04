@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 '%s__isnull' % klass.Api.resource_field: False
             }
 
-            resource_ids = klass.objects.filter(**params).values_list('id', flat=True)[:limit]
+            resource_ids = klass.objects.filter(**params).values_list('id', flat=True).order_by('-id')[:limit]
 
             tasks = [sync_status.subtask(args=(klass, resource_id, )) for resource_id in resource_ids]
 
